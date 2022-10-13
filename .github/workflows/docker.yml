@@ -1,0 +1,53 @@
+# Automated FB Ads extraction with GitHub Actions
+
+name: Automated Facebook political ads extraction using API
+
+# Controls when the action will run.
+on:
+  schedule:
+    - cron: '00 12 * * *'
+  push:
+    branches: main
+
+jobs:
+  extract:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    container:
+      image: rocker/tidyverse:latest
+    # Load repo and run the extraction script
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        ref: main
+    - name: 1. Check validity of FB ADS API token
+      env:
+          FB_TOKEN: ${{ secrets.FB_TOKEN }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      run: Rscript 00_check_token_validity.R
+    - name: 2. Extract FB Ads using API
+    # This action needs a FB API token as an environment variable (we are using GitHub Secrets). We also need to get GH personal access token, because we are installing Radlibrary from GH repository
+      env:
+          FB_TOKEN: ${{ secrets.FB_TOKEN }}
+          GITHUB_PAT: ${{ secrets.GH_PAT }}
+      run: Rscript 01_ads_extract.R
+    - name: 3. Create summarized data
+      run: Rscript 02_create_summary_tables.R
+    - name: 4. Install necessary packages for dashboard
+      run: Rscript -e "install.packages(c('flexdashboard', 'plotly', 'htmlwidgets', 'reactable', 'reactablefmtr'), Ncpus = parallel::detectCores())"
+    - name: 5. Update dashboard for GitHub Pages
+      run: Rscript -e "rmarkdown::render('index.Rmd')"
+    - name: 6. Print information about the session
+      run: Rscript -e "sessionInfo()"
+    - name: 7. Commit newly updated files        
+      run: |
+        git config --global --add safe.directory /__w/TI_monitoring_fb_political_ads_2022/TI_monitoring_fb_political_ads_2023
+        git status
+        git config --global user.name "actions-user"
+        git config --global user.email "actions@github.com"
+        git add data/* index.html
+        git commit -am "GH Action $(date)"
+        git push origin main
