@@ -1,7 +1,7 @@
 ---
 title: "Facebook ADS"
 author: "Ondrej Pekacek & TI CZ"
-date: "`r format(as.Date('2022-09-25'),'%d. %m. %Y')`"
+date: "`r format(as.Date('2022-11-01'),'%d. %m. %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     logo: "doc/logo_ti.png"
@@ -10,9 +10,9 @@ output:
       in_header: "doc/header.html"
     orientation: columns
     vertical_layout: fill
-    source_code: https://github.com/opop999/TI_monitoring_fb_political_ads_2022
+    source_code: https://github.com/opop999/TI_monitoring_fb_political_ads_2023
     navbar:
-      - {title: "Project", icon: "ion-information-circled", href: "https://www.transparentnivolby.cz/komunalni-senat2022/"}
+      - {title: "Project", icon: "ion-information-circled", href: "https://www.transparentnivolby.cz/"}
       - {title: "Author", icon: "ion-social-linkedin", href: "https://www.linkedin.com/in/ondrej-pekacek"}
       - {title: "Data", icon: "ion-cloud", href: "https://www.facebook.com/ads/library/"}
 ---
@@ -47,7 +47,7 @@ top_10_spenders <- summary_dataset %>%
   select(page_name, page_id, avg_spend)
 
 # Election date for vertical line in the time-plots
-election_date <- as.Date("2022-09-25")
+election_date <- as.Date("2023-01-27")
 
 # Graph zoom date end & beginning
 start_date <- as.Date("2022-04-13")
