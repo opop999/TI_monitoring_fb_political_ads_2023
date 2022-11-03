@@ -2,7 +2,8 @@
 candidates <- c(
   "Jaroslav Bašta" = "102389958091735",
   "Hynek Blaško" = "2335052983406911",
-  "Tomáš Zima" = "236211929833146"
+  "Tomáš Zima" = "236211929833146",
+  "Petr Pavel" = "102389958091735"
 )
 
 

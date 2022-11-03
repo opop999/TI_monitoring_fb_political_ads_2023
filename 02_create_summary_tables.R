@@ -25,8 +25,8 @@ pln_rate <- 5.196
 vnd_rate <- 0.001
 
 # # Specify the end date for the data collection.
-ads_create_end_date <- as.Date("2022-09-25")
-ads_display_end_date <- as.Date("2022-09-25")
+ads_create_end_date <- as.Date("2022-12-01")
+ads_display_end_date <- as.Date("2022-12-01")
 
 full_ads_table <- readRDS(paste0(directory, "/merged_dataset.rds")) %>%
   filter(ad_creation_time <= ads_create_end_date & ad_delivery_start_time <= ads_display_end_date)
@@ -57,7 +57,7 @@ ad_summary <- full_ads_table %>%
     currency == "EUR"  ~ spend_upper * eur_rate,
     currency == "PLN"  ~ spend_upper * pln_rate,
     currency == "VND"  ~ spend_upper * vnd_rate
-  ), digits = 0)) %>% 
+  ), digits = 0)) %>%
   group_by(page_name, page_id) %>%
   summarise(
     total_ads = n(),
@@ -216,7 +216,7 @@ regional_spenders <- merged_summary %>%
   transmute(page_name,
             page_id,
             region,
-            regional_spend = round(avg_spend * spend_proportion, 0)) 
+            regional_spend = round(avg_spend * spend_proportion, 0))
 
 
 fwrite(merged_summary, paste0(directory, "/summary_tables/merged_summary.csv"))

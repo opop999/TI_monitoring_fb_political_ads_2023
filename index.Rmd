@@ -1,7 +1,7 @@
 ---
 title: "Facebook ADS"
 author: "Ondrej Pekacek & TI CZ"
-date: "`r format(as.Date('2022-11-01'),'%d. %m. %Y')`"
+date: "`r format(Sys.Date(),'%d. %m. %Y')`"
 output: 
   flexdashboard::flex_dashboard:
     logo: "doc/logo_ti.png"
@@ -17,6 +17,17 @@ output:
       - {title: "Data", icon: "ion-cloud", href: "https://www.facebook.com/ads/library/"}
 ---
 
+```{css, echo=FALSE}
+.navbar-inverse {
+    background-color: #FFF8E8;
+}
+```
+
+```{js, echo=FALSE}
+     // Add pull-left class to logo
+    document.querySelector("span.navbar-logo").classList.add("pull-left")
+```
+    
 ```{r setup, include=FALSE}
 # Disable scientific notation of numbers
 options(scipen = 999)
@@ -50,8 +61,8 @@ top_10_spenders <- summary_dataset %>%
 election_date <- as.Date("2023-01-27")
 
 # Graph zoom date end & beginning
-start_date <- as.Date("2022-04-13")
-end_date <- as.Date("2022-10-01")
+start_date <- as.Date("2022-08-01")
+end_date <- as.Date("2023-01-27")
 
 # Specify output directory for individual plots
 directory <- "data/html_plots"
