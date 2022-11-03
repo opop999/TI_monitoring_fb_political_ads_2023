@@ -32,8 +32,6 @@
 
 | **POLITICAL SUBJECT**                | **NUMERIC ID**  |
 |:-------------------------------------|:----------------|
-| Jaroslav Bašta                       | 104240328634520 |
-| 3PK pro prosperující Českou Třebovou | 102161328913584 |
 |                                      |                 |
 |                                      |                 |
 |                                      |                 |
