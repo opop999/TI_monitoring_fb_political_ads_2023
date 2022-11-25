@@ -2,7 +2,7 @@
 
 [![Automated Facebook political ads extraction using API](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/docker.yml/badge.svg)](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/docker.yml)
 
-[![Logo TI](https://www.transparentnivolby.cz/komunalni-senat2022/wp-content/themes/2022krajsenat/images/logo_new.png)](https://www.transparentnivolby.cz/komunalni-senat2022/)
+[![Logo TI](https://www.transparentnivolby.cz/hrad2023/wp-content/themes/prezident2023/images/logo2023.svg)](https://www.transparentnivolby.cz/hrad2023/)
 
 # Transparency International (CZ) election monitoring: <br> [2023 Czech presidential elections](https://www.transparentnivolby.cz/komunalni-senat2022/)
 
