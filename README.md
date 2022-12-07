@@ -29,7 +29,7 @@
 
 ------------------------------------------------------------------------
 
-**The main list of official presidential candidates and their Facebook numeric IDs.**
+**The main list of official presidential candidates and their Facebook numeric IDs in alphabetic order.**
 
 | **POLITICAL SUBJECT**                | **NUMERIC ID**  |
 |:-------------------------------------|:----------------|
