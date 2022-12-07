@@ -18,15 +18,15 @@ options(scipen = 999)
 # Specify directory
 directory <- "data"
 
-# Specify currency rate to CZK (17th September 2022) for conversion of ad amounts
-usd_rate <- 24.606
-eur_rate <- 24.495
-pln_rate <- 5.196
-vnd_rate <- 0.001
+# Specify currency rate to CZK (7th December 2022) for conversion of ad amounts
+usd_rate <- 23.105
+eur_rate <- 24.325
+pln_rate <- 5.176
+vnd_rate <- 0.000951
 
 # # Specify the end date for the data collection.
-ads_create_end_date <- as.Date("2022-12-01")
-ads_display_end_date <- as.Date("2022-12-01")
+ads_create_end_date <- as.Date("2023-01-27")
+ads_display_end_date <- as.Date("2023-01-27")
 
 full_ads_table <- readRDS(paste0(directory, "/merged_dataset.rds")) %>%
   filter(ad_creation_time <= ads_create_end_date & ad_delivery_start_time <= ads_display_end_date)
