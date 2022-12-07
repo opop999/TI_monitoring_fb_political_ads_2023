@@ -1,0 +1,145 @@
+
+```{r setup}
+# Package names
+packages <- c("jsonlite", "dplyr", "purrr")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+```
+
+```{r}
+# Specify presidential candidates and their numeric ids
+candidates <- c(
+  "jaroslav_basta" = "104240328634520",
+  "tomas_zima" = "236211929833146",
+  "petr_pavel" = "102389958091735",
+  "andrej_babis" = "214827221987263",
+  "danuse_nerudova" = "102845669064210",
+  "pavel_fischer" = "1934837773438430",
+  "marek_hilser" = "280411075659709",
+  "josef_stredula" = "1432139953751418",
+  "denisa_rohanova" = "171740986593382"
+)
+
+saveRDS(candidates, "numeric_ids_candidates.rds")
+```
+
+```{js}
+// Function to enable saving to JSON
+
+// e.g. console.save({hello: 'world'})
+(function(console) {
+    console.save = function(data, filename) {
+        if (!data) {
+            console.error("Console.save: No data");
+            return;
+        }
+        if (!filename)
+            filename = "console.json";
+        if (typeof data === "object") {
+            data = JSON.stringify(data, undefined, 4);
+        }
+        var blob = new Blob([data],{
+            type: "text/json"
+        })
+          , a = document.createElement("a");
+        var e = new MouseEvent("click",{
+            view: window,
+            bubbles: true,
+            cancelable: false,
+        });
+        a.download = filename;
+        a.href = window.URL.createObjectURL(blob);
+        a.dataset.downloadurl = ["text/json", a.download, a.href].join(":");
+        a.dispatchEvent(e);
+    }
+    ;
+}
+)(console);
+
+function top_ads_scrape(name, id, numbering, date_range) {
+    // initiate empty dictionary
+    var entities = {};
+
+    var len = document.querySelectorAll(id).length;
+
+    console.assert(typeof len === "number", "Length is not a number");
+
+    window.onload = function() {
+        for (let i = 0; i < len; i++) {
+            entities[document.querySelectorAll(name)[i]?.innerText] = document.querySelectorAll(id)[i]?.attributes["href"].nodeValue.split("id=")[1];
+        }
+    }
+    ;
+
+    window.onload();
+
+    // Copy to clipboard
+    copy(entities);
+    // make a table
+    console.table(entities);
+
+    var current_page = document.querySelector(numbering).innerText.split("/")[0].trim();
+
+    var current_range = document.querySelector(date_range).innerText.toLowerCase().replace(/\s/g, "").replace(",", "_");
+
+    return console.save(entities, "top_spenders_" + current_range + "_p_" + current_page + ".json");
+}
+
+// Specify the CSS selectors for each of the necessary elements on the FB ADS report page
+// IMPORTANT: All of these tend to vary over time as FB changes them. You need to likely go to the webpage and inspect the elements. Alternatively, get the report data as a CSV by clicking on the "export" button at the bottom of the page.
+top_ads_scrape(name = "a > div:nth-child(2) > span > div", // Div element which wraps the text in the first column of the table 
+               id = "#content > div > div > div > div> div > div > div > div > div > div> div > div > a", // an a element which contains the url to the profile together with the numeric id we need
+               numbering = ".xdxwlmd span.x1swvt13.xuxw1ft", // Get the current page number from the span element below the table
+               date_range = "div > div[role='heading'][aria-level='1']"); // Get the report date range from the div element above the table
+
+// Optional: automatic click to go to the next page
+document.querySelector("div > div > button:nth-child(3) > div > i").click()
+```
+
+
+```{r}
+# List all of the JSON data scraped from FB Ads library in the previous step
+json_chunks <- list.files(path = "fb_report_spenders/", pattern = "top_spenders_\\S+\\.json", full.names = TRUE)
+
+# Create a list of all of the subject we are interested in getting the political advertising info about.
+
+# Remove pages that advertise in more countries - getting region information for these ads overwhelm the FB ads api.
+remove_pages <-
+  c(
+    "European Parliament" = "178362315106",
+    "European Commission" = "107898832590939",
+    "World Food Programme" = "28312410177",
+    "GoStudy" = "484856584931855",
+    "AdVenture Communist" = "100451933698060",
+    "UNICEF" = "68793499001",
+    "Council of the European Union" = "147547541961576",
+    "Azur Games" = "1238173096287495",
+    "ROLEX" = "288607211258386"
+  )
+
+# Read all of the JSON data chunks in. 
+pages_list <- json_chunks %>% 
+  map(read_json) %>% 
+  unlist(recursive = TRUE) %>%
+  .[!. %in% remove_pages]
+
+# Save the list to the .rds file
+saveRDS(pages_list, "numeric_ids_all_saved_pages.rds")
+
+# Delete the uneeded JSON chunks based on user input
+if (readline(prompt = "Do you want to delete the JSON chunks (y/n) : ") == "y") {
+  unlink(json_chunks)
+  print("All JSON chunks deleted.")
+} else {
+  print("JSON chunks won't be deleted.")
+}
+
+```
+
