@@ -1,6 +1,6 @@
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 
-[![Automated Facebook political ads extraction using API](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/docker.yml/badge.svg)](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/docker.yml)
+[![Automated Facebook political ads extraction using API](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/fb_political_ads_extract.yml/badge.svg)](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/fb_political_ads_extract.yml)
 
 [![Logo TI](https://www.transparentnivolby.cz/hrad2023/wp-content/themes/prezident2023/images/logo2023.svg)](https://www.transparentnivolby.cz/hrad2023/)
 
