@@ -1,0 +1,1755 @@
+---
+title: "Facebook ADS Candidates"
+author: "Ondrej Pekacek & TI CZ"
+date: "`r format(Sys.Date(),'%d. %m. %Y')`"
+output: 
+  flexdashboard::flex_dashboard:
+    logo: "input/dashboard/logo_ti.svg"
+    css: "input/dashboard/style.css"
+    theme: readable
+    includes:
+      in_header: "input/dashboard/header.html"
+    orientation: columns
+    vertical_layout: fill
+    source_code: https://github.com/opop999/TI_monitoring_fb_political_ads_2023
+    navbar:
+      - {title: "Show all", icon: "ion-ios-people", href: "./index.html"}
+      - {title: "Project", icon: "ion-information-circled", href: "https://www.transparentnivolby.cz/hrad2023/"}
+      - {title: "Author", icon: "ion-social-linkedin", href: "https://www.linkedin.com/in/ondrej-pekacek"}
+      - {title: "Data", icon: "ion-cloud", href: "https://www.facebook.com/ads/library/"}
+params:
+  election_date: "2023-01-27"
+  start_date: "2022-07-01"
+  end_date: "2023-01-27"
+  packages: ["dplyr", "ggplot2", "forcats", "tidyr", "reactable", "reactablefmtr", "stringr", "plotly", "flexdashboard", "htmlwidgets"]
+  data_dir: "output"
+  plots_dir: "plots"
+  candidates_dir: "input"
+  plots_static_dir: "static_candidates"
+  plots_interactive_dir: "interactive_candidates"
+  spenders_limit_high: 100
+  spenders_limit_mobile_high: 20
+  spenders_limit_low: 10
+  spenders_limit_mobile_low: 10  
+  min_ads_filter: 10
+---
+
+```{js, echo=FALSE}
+// Add pull-left class to logo
+document.querySelector("span.navbar-logo").classList.add("pull-left")
+// Add link wrapper to logo
+$("span.navbar-logo").wrap('<a href="https://www.transparentnivolby.cz/hrad2023/">');
+```
+    
+```{r setup, include=FALSE}
+# Disable scientific notation of numbers
+options(scipen = 999)
+
+# Install packages not yet installed
+installed_packages <- params$packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(params$packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(params$packages, library, character.only = TRUE))
+
+# Get election candidates ids for filtering
+candidates_id <- readRDS(file.path(params$candidates_dir, "numeric_ids_candidates.rds"))
+
+# Import datasets created in the previous script
+summary_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "merged_summary.rds")) %>% filter(page_id %in% candidates_id)
+time_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "time_summary.rds")) %>% filter(page_id %in% candidates_id)
+regional_spenders <- readRDS(file.path(params$data_dir, "summary_tables", "regional_spenders.rds")) %>% filter(page_id %in% candidates_id)
+
+# Select top spenders for different plot sizes
+spenders_limit_high <- summary_dataset %>%
+  slice_max(avg_spend, n = params$spenders_limit_high) %>%
+  pull(page_id)
+
+spenders_limit_low <- summary_dataset %>%
+  slice_max(avg_spend, n = params$spenders_limit_low) %>%
+  pull(page_id)
+
+spenders_limit_mobile_high <- summary_dataset %>%
+  slice_max(avg_spend, n = params$spenders_limit_mobile_high) %>%
+  pull(page_id)
+
+spenders_limit_mobile_low <- summary_dataset %>%
+  slice_max(avg_spend, n = params$spenders_limit_mobile_low) %>%
+  pull(page_id)
+
+# # Graph zoom date end & beginning + election date for vertical line in the time-plots
+election_date <- as.Date(params$election_date)
+start_date <- as.Date(params$start_date)
+end_date <- as.Date(params$end_date)
+
+# Set upper limit for the number of accounts that show in the graphs
+min_ads <- params$min_ads_filter
+
+# Set output dir for individual plots
+output_dir <- file.path(params$data_dir, params$plots_dir)
+static_dir <- file.path(params$data_dir, params$plots_dir, params$plots_static_dir)
+interactive_dir <- file.path(params$data_dir, params$plots_dir, params$plots_interactive_dir)
+
+# Check whether output directory exists to save individual plots
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+} else {
+  print("Output directory for all plots already exists")
+}
+
+# Repeat for subdirectories
+if (!dir.exists(static_dir)) {
+  dir.create(static_dir)
+} else {
+  print("Subdirectory for static plots already exists")
+}
+
+# Repeat for subdirectories
+if (!dir.exists(interactive_dir)) {
+  dir.create(interactive_dir)
+} else {
+  print("Subdirectory for interactive plots already exists")
+}
+```
+
+Ads
+=====================================
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### **TOTAL ADS** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "total_ads"
+fill_lab <- "Proportion unique ads"
+x_lab <- "Total ads"
+y_lab <- element_blank()
+title_lab <- paste(
+  "Total ads of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_high) %>%
+  mutate(page_name = reorder(page_name, total_ads)) %>%
+  ggplot(
+    aes(
+      x = total_ads,
+      y = page_name,
+      fill = percent_unique,
+      text = paste(
+        "Page:",
+        page_name,
+        "<br>Total ads:",
+        total_ads,
+        "<br>Proportion unique ads:",
+        percent_unique * 100,
+        "%"
+      )
+    )
+  ) +
+  geom_col() +
+  scale_fill_gradient(
+    low = "#fbe8e7",
+    high = "#db1d0b",
+    limits = c(0, 1),
+    breaks = c(0, 0.25, 0.50, 0.75, 1),
+    labels = c("0%", "25%", "50%", "75%", "100%")
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 5000, 250),
+    labels = seq(0, 5000, 250)
+  ) +
+  theme_minimal() +
+  labs(
+    fill = fill_lab,
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <- ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **TOTAL SPENDING** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "total_spending"
+fill_lab <- "Per ad (CZK thousands)"
+x_lab <- "Total spend (CZK thousands)"
+y_lab <- element_blank()
+title_lab <- paste(
+  "Spending on ads of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_high) %>%
+  mutate(
+    avg_spend_1000 = round(avg_spend / 1000, digits = 0),
+    per_ad_avg_spend_1000 = round(per_ad_avg_spend / 1000, digits = 1),
+    page_name = reorder(page_name, avg_spend)
+  ) %>%
+  ggplot(aes(
+    x = avg_spend_1000,
+    y = page_name,
+    fill = per_ad_avg_spend_1000,
+    text = paste(
+      "Page:",
+      page_name,
+      "<br>Total spend:",
+      avg_spend_1000,
+      "thousand CZK",
+      "<br>Per ad avg spend:",
+      per_ad_avg_spend_1000,
+      "thousand CZK"
+    )
+  )) +
+  geom_col() +
+  scale_fill_gradient2(
+    low = "#e1e9ef",
+    mid = "#023059",
+    high = "#011c33",
+    midpoint = 35,
+    limits = c(0, 100)
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 5000, 250),
+    labels = seq(0, 5000, 250)
+  ) +
+  theme_minimal() +
+  labs(
+    fill = fill_lab,
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **AD LENGTH** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "ad_length"
+x_lab <- "Number of Words"
+y_lab <- element_blank()
+title_lab <- paste(
+  "Average ad length in words of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_high) %>%
+  mutate(page_name = reorder(page_name, avg_words)) %>%
+  ggplot(aes(
+    x = avg_words,
+    y = page_name,
+    text = paste(
+      "Page:",
+      page_name,
+      "<br>Avg length per ad:",
+      avg_words, "words"
+    )
+  )) +
+  geom_col(fill = "#320266") +
+  scale_x_continuous(
+    breaks = seq(0, 1500, 50),
+    labels = seq(0, 1500, 50)
+  ) +
+  theme_minimal() +
+  labs(
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **AD RUNTIME** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "ad_runtime"
+x_lab <- "Days"
+y_lab <- element_blank()
+title_lab <- paste(
+  "Average ad runtime of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_high) %>%
+  mutate(page_name = reorder(page_name, avg_ad_runtime)) %>%
+  ggplot(aes(
+    x = avg_ad_runtime,
+    y = page_name,
+    text = paste(
+      "Page:",
+      page_name,
+      "<br>Avg runtime:",
+      avg_ad_runtime, "days"
+    )
+  )) +
+  geom_col(fill = "#026663") +
+  scale_x_continuous(
+    breaks = seq(0, 150, 5),
+    labels = seq(0, 150, 5)
+  ) +
+  theme_minimal() +
+  labs(
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **IMPRESSIONS** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "total_impressions"
+fill_lab <- "Per Ad impressions (thousands)"
+x_lab <- "Total impressions (millions)"
+y_lab <- element_blank()
+title_lab <- paste(
+  "Total ads impressions of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_high) %>%
+  mutate(
+    avg_impressions_million = round(total_avg_impressions / 1000000, digits = 3),
+    per_ad_avg_impressions_1000 = round(per_ad_avg_impression / 1000, digits = 1),
+    page_name = reorder(page_name, avg_impressions_million)
+  ) %>%
+  ggplot(
+    aes(
+      x = avg_impressions_million,
+      y = page_name,
+      fill = per_ad_avg_impressions_1000,
+      text = paste(
+        "Page:",
+        page_name,
+        "<br>Total impressions:",
+        avg_impressions_million,
+        "million",
+        "<br>Avg impressions per ad:",
+        per_ad_avg_impressions_1000,
+        "thousand"
+      )
+    )
+  ) +
+  geom_col() +
+  scale_fill_gradient2(
+    low = "#f9fefa",
+    mid = "#84cc8a",
+    high = "#011603",
+    midpoint = 100,
+    limits = c(0, 1000)
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 1000, 5),
+    labels = seq(0, 1000, 5)
+  ) +
+  theme_minimal() +
+  labs(
+    fill = fill_lab,
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **AVERAGE AUDIENCE** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "avg_audience"
+x_lab <- "Average targeted audience size (thousands)"
+y_lab <- element_blank()
+title_lab <- paste(
+  "Average minimal estimated audience of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_high) %>%
+  mutate(
+    avg_ad_min_audience_1000 = round(avg_ad_min_audience / 1000, digits = 0),
+    page_name = reorder(page_name, avg_ad_min_audience_1000)
+  ) %>%
+  ggplot(
+    aes(
+      x = avg_ad_min_audience_1000,
+      y = page_name,
+      text = paste(
+        "Page:",
+        page_name,
+        "<br>Average minimal audience:",
+        avg_ad_min_audience_1000, "thousand people"
+      )
+    )
+  ) +
+  geom_col(fill = "#94d9ee") +
+  scale_x_continuous(
+    breaks = seq(0, 2000, 100),
+    labels = seq(0, 2000, 100)
+  ) +
+  theme_minimal() +
+  labs(
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **ADS SUMMARY TABLE** {.no-mobile}
+
+```{r}
+summary_dataset %>%
+  select(1:12) %>%
+  reactable(
+    defaultPageSize = 15,
+    theme = nytimes(),
+    highlight = TRUE,
+    defaultSorted = c("page_name"),
+    filterable = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(filterable = FALSE),
+    columns = list(
+      "page_name" = colDef(name = "Page Name", sticky = "left", filterable = TRUE, width = 120),
+      "page_id" = colDef(name = "Page ID", sticky = "left", width = 120),
+      "total_ads" = colDef(name = "Total Ads", ),
+      "unique_ads" = colDef(name = "Unique Ads"),
+      "percent_unique" = colDef(name = "Proportion Unique", format = colFormat(percent = TRUE, digits = 1)),
+      "avg_words" = colDef(name = "Average Words"),
+      "avg_spend" = colDef(name = "Spend", format = colFormat(prefix = "CZK ", separators = TRUE, digits = 0)),
+      "per_ad_avg_spend" = colDef(name = "Per Ad Spend", format = colFormat(prefix = "CZK ", separators = TRUE, digits = 0)),
+      "total_avg_impressions" = colDef(name = "Total Impressions", format = colFormat(separators = TRUE, digits = 0)),
+      "per_ad_avg_impression" = colDef(name = "Per Ad Impressions", format = colFormat(separators = TRUE, digits = 0)),
+      "avg_ad_min_audience" = colDef(name = "Average Ad Min Audience", format = colFormat(separators = TRUE, digits = 0)),
+      "avg_ad_runtime" = colDef(name = "Average Runtime", format = colFormat(suffix = " days"))
+    )
+  )
+```
+
+Column {.tabset .mobile}
+-----------------------------------------------------------------------
+
+### **TOTAL ADS** 
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_high) %>%
+    mutate(page_name = reorder(page_name, total_ads)) %>%
+    ggplot(
+      aes(
+        x = total_ads,
+        y = page_name,
+        fill = percent_unique,
+        text = paste(
+          "Page:",
+          page_name,
+          "<br>Total ads:",
+          total_ads,
+          "<br>Proportion unique ads:",
+          percent_unique * 100,
+          "%"
+        )
+      )
+    ) +
+    geom_col() +
+    scale_fill_gradient(
+      low = "#fbe8e7",
+      high = "#db1d0b",
+      limits = c(0, 1),
+      breaks = c(0, 0.25, 0.50, 0.75, 1),
+      labels = c("0%", "25%", "50%", "75%", "100%")
+    ) +
+    scale_y_discrete(label = function(x) str_trunc(x, 16)) +
+    scale_x_continuous(
+      breaks = seq(0, 5000, 500),
+      labels = seq(0, 5000, 500)
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      fill = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **TOTAL SPENDING** 
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_high) %>%
+    mutate(
+      avg_spend_1000 = round(avg_spend / 1000, digits = 0),
+      per_ad_avg_spend_1000 = round(per_ad_avg_spend / 1000, digits = 1),
+      page_name = reorder(page_name, avg_spend)
+    ) %>%
+    ggplot(
+      aes(x = avg_spend_1000, y = page_name, fill = per_ad_avg_spend_1000, text = paste(
+        "Page:",
+        page_name,
+        "<br>Total spend:",
+        avg_spend_1000, "thousand CZK",
+        "<br>Per ad avg spend:",
+        per_ad_avg_spend_1000, "thousand CZK"
+      ))
+    ) +
+    geom_col() +
+    scale_fill_gradient2(
+      low = "#e1e9ef",
+      mid = "#023059",
+      high = "#011c33",
+      midpoint = 35,
+      limits = c(0, 100)
+    ) +
+    scale_x_continuous(
+      breaks = seq(0, 5000, 500),
+      labels = seq(0, 5000, 500)
+    ) +
+    scale_y_discrete(label = function(x) str_trunc(x, 16)) +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      fill = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **AD LENGTH** 
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_high) %>%
+    mutate(page_name = reorder(page_name, avg_words)) %>%
+    ggplot(aes(
+      x = avg_words, y = page_name,
+      text = paste(
+        "Page:",
+        page_name,
+        "<br>Avg length per ad:",
+        avg_words, "words"
+      )
+    )) +
+    geom_col(fill = "#320266") +
+    scale_x_continuous(
+      breaks = seq(0, 1500, 100),
+      labels = seq(0, 1500, 100)
+    ) +
+    scale_y_discrete(label = function(x) str_trunc(x, 16)) +
+    theme_minimal() +
+    labs(
+      x = element_blank(),
+      y = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **AD RUNTIME** 
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_high) %>%
+    mutate(page_name = reorder(page_name, avg_ad_runtime)) %>%
+    ggplot(aes(
+      x = avg_ad_runtime,
+      y = page_name,
+      text = paste(
+        "Page:",
+        page_name,
+        "<br>Avg runtime:",
+        avg_ad_runtime, "days"
+      )
+    )) +
+    geom_col(fill = "#026663") +
+    scale_x_continuous(
+      breaks = seq(0, 150, 5),
+      labels = seq(0, 150, 5)
+    ) +
+    scale_y_discrete(
+      label = function(x) {
+        str_trunc(x, 16)
+      }
+    ) +
+    theme_minimal() +
+    labs(
+      x = element_blank(),
+      y = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **IMPRESSIONS** 
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_high) %>%
+    mutate(
+      avg_impressions_million = round(total_avg_impressions / 1000000, digits = 3),
+      per_ad_avg_impressions_1000 = round(per_ad_avg_impression / 1000, digits = 1),
+      page_name = reorder(page_name, avg_impressions_million)
+    ) %>%
+    ggplot(
+      aes(
+        x = avg_impressions_million,
+        y = page_name,
+        fill = per_ad_avg_impressions_1000,
+        text = paste(
+          "Page:",
+          page_name,
+          "<br>Total impressions:",
+          avg_impressions_million,
+          "million",
+          "<br>Avg impressions per ad:",
+          per_ad_avg_impressions_1000,
+          "thousand"
+        )
+      )
+    ) +
+    geom_col() +
+    scale_fill_gradient2(
+      low = "#f9fefa",
+      mid = "#84cc8a",
+      high = "#011603",
+      midpoint = 100,
+      limits = c(0, 1000)
+    ) +
+    scale_x_continuous(
+      breaks = seq(0, 1000, 10),
+      labels = seq(0, 1000, 10)
+    ) +
+    scale_y_discrete(
+      label = function(x) {
+        str_trunc(x, 16)
+      }
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      fill = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **AVERAGE AUDIENCE** 
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_high) %>%
+    mutate(
+      avg_ad_min_audience_1000 = round(avg_ad_min_audience / 1000, digits = 0),
+      page_name = reorder(page_name, avg_ad_min_audience_1000)
+    ) %>%
+    ggplot(aes(
+      x = avg_ad_min_audience_1000,
+      y = page_name,
+      text = paste(
+        "Page:",
+        page_name,
+        "<br>Average minimal audience:",
+        avg_ad_min_audience_1000,
+        "thousand people"
+      )
+    )) +
+    geom_col(fill = "#94d9ee") +
+    scale_x_continuous(
+      breaks = seq(0, 2000, 250),
+      labels = seq(0, 2000, 250)
+    ) +
+    scale_y_discrete(
+      label = function(x) {
+        str_trunc(x, 16)
+      }
+    ) +
+    theme_minimal() +
+    labs(
+      x = element_blank(),
+      y = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **ADS SUMMARY TABLE** 
+
+```{r}
+summary_dataset %>%
+  select(1:12) %>%
+  reactable(
+    defaultPageSize = 15,
+    theme = nytimes(),
+    highlight = TRUE,
+    defaultSorted = c("page_name"),
+    filterable = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(filterable = FALSE),
+    columns = list(
+      "page_name" = colDef(name = "Page Name", sticky = "left", filterable = TRUE, width = 70),
+      "page_id" = colDef(name = "Page ID", sticky = "left", width = 50),
+      "total_ads" = colDef(name = "Total Ads", ),
+      "unique_ads" = colDef(name = "Unique Ads"),
+      "percent_unique" = colDef(name = "Proportion Unique", format = colFormat(percent = TRUE, digits = 1)),
+      "avg_words" = colDef(name = "Average Words"),
+      "avg_spend" = colDef(name = "Spend", format = colFormat(prefix = "CZK ", separators = TRUE, digits = 0)),
+      "per_ad_avg_spend" = colDef(name = "Per Ad Spend", format = colFormat(prefix = "CZK ", separators = TRUE, digits = 0)),
+      "total_avg_impressions" = colDef(name = "Total Impressions", format = colFormat(separators = TRUE, digits = 0)),
+      "per_ad_avg_impression" = colDef(name = "Per Ad Impressions", format = colFormat(separators = TRUE, digits = 0)),
+      "avg_ad_min_audience" = colDef(name = "Average Ad Min Audience", format = colFormat(separators = TRUE, digits = 0)),
+      "avg_ad_runtime" = colDef(name = "Average Runtime", format = colFormat(suffix = " days"))
+    )
+  )
+```
+
+
+Trends
+=====================================
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### **SPENDING OVER TIME** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "spend_over_time"
+color_lab <- ""
+x_lab <- element_blank()
+y_lab <- "CZK million"
+title_lab <- paste(
+  "Spending on ads of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- time_dataset %>%
+  filter(page_id %in% spenders_limit_low) %>%
+  mutate(
+    ad_creation_time_week = as.Date(cut(
+      ad_creation_time,
+      breaks = "week",
+      start.on.monday = TRUE
+    )) + 6,
+    cumulative_spend_million = round((cumulative_spend / 1000000), digits = 3)
+  ) %>%
+  group_by(page_name, ad_creation_time_week) %>%
+  summarise(end_of_week_million_spend = max(cumulative_spend_million)) %>%
+  ungroup() %>%
+  ggplot(aes(x = ad_creation_time_week, y = end_of_week_million_spend, color = page_name)) +
+  geom_line() +
+  geom_point(size = 0.8, aes(
+    text = paste(
+      "Page:",
+      page_name,
+      "<br>Week:",
+      ad_creation_time_week,
+      "<br>Cumulative spend:",
+      end_of_week_million_spend,
+      "million CZK"
+    )
+  )) +
+  geom_vline(
+    aes(xintercept = as.numeric(election_date)),
+    color = "#563a3a",
+    linetype = 2,
+    linewidth = 0.2
+  ) +
+  geom_text(
+    aes(x = election_date, y = 0, label = "elections"),
+    color = "#22209F",
+    vjust = -1,
+    size = 3,
+    fontface = "bold",
+    check_overlap = TRUE
+  ) +
+  theme_minimal() +
+  scale_y_continuous(
+    breaks = seq(0, 10, 0.5),
+    labels = seq(0, 10, 0.5)
+  ) +
+  scale_x_date(date_breaks = "1 months", date_labels = "%d.%m.%y") +
+  coord_cartesian(xlim = c(start_date, end_date), expand = TRUE) +
+  theme(
+    legend.title = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  labs(
+    color = color_lab,
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **SPENDING WEEKLY** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "spend_weekly"
+fill_lab <- ""
+x_lab <- element_blank()
+y_lab <- "CZK thousand"
+title_lab <- paste(
+  "Weekly spending on ads of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+
+```{r}
+plot <- time_dataset %>%
+  filter(page_id %in% spenders_limit_low) %>%
+  mutate(
+    end_of_week = as.Date(cut(ad_creation_time, breaks = "week", start.on.monday = TRUE)) + 6,
+  ) %>%
+  group_by(page_name, end_of_week) %>%
+  summarise(by_week_thousands_spend = round(sum(avg_spend) / 1000, digits = 0)) %>%
+  ungroup() %>%
+  ggplot(aes(
+    x = end_of_week, y = by_week_thousands_spend, fill = page_name,
+    text = paste(
+      "Page:",
+      page_name,
+      "<br>Week:",
+      end_of_week,
+      "<br>Weekly spend:",
+      by_week_thousands_spend, "thousand CZK"
+    )
+  )) +
+  geom_col(width = 5.5) +
+  geom_vline(xintercept = as.numeric(election_date), color = "#563a3a", linetype = 2, linewidth = 0.2) +
+  geom_text(aes(x = election_date, y = 0, label = "elections"), color = "#22209F", vjust = -1, size = 3, fontface = "bold", check_overlap = TRUE) +
+  theme_minimal() +
+  scale_y_continuous(
+    breaks = seq(0, 5000, 250),
+    labels = seq(0, 5000, 250)
+  ) +
+  scale_x_date(date_breaks = "1 months", date_labels = "%d.%m.%y") +
+  coord_cartesian(xlim = c(start_date, end_date), expand = TRUE) +
+  theme(legend.title = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    fill = fill_lab,
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+Column {.tabset .mobile}
+-----------------------------------------------------------------------
+
+### **SPENDING OVER TIME**
+
+```{r}
+ggplotly(
+  time_dataset %>%
+    filter(page_id %in% spenders_limit_mobile_low) %>%
+    mutate(
+      ad_creation_time_week = as.Date(cut(
+        ad_creation_time,
+        breaks = "week",
+        start.on.monday = TRUE
+      )) + 6,
+      cumulative_spend_million = round((cumulative_spend / 1000000), digits = 3)
+    ) %>%
+    group_by(page_name, ad_creation_time_week) %>%
+    summarise(end_of_week_million_spend = max(cumulative_spend_million)) %>%
+    ungroup() %>%
+    ggplot(
+      aes(x = ad_creation_time_week, y = end_of_week_million_spend, color = page_name)
+    ) +
+    geom_line() +
+    geom_point(size = 0.8, aes(text = paste(
+      "Page:",
+      page_name,
+      "<br>Week:",
+      ad_creation_time_week,
+      "<br>Cumulative spend:",
+      end_of_week_million_spend, "million CZK"
+    ))) +
+    geom_vline(
+      aes(xintercept = as.numeric(election_date)),
+      color = "#563a3a",
+      linetype = 2,
+      linewidth = 0.2
+    ) +
+    geom_text(
+      aes(x = election_date, y = 0, label = "elections"),
+      color = "#22209F",
+      vjust = -1,
+      size = 3,
+      fontface = "bold",
+      check_overlap = TRUE
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    scale_y_continuous(
+      breaks = seq(0, 10, 1),
+      labels = seq(0, 10, 1)
+    ) +
+    scale_x_date(date_breaks = "1 months", date_labels = "%d.%m.%y") +
+    coord_cartesian(xlim = c(start_date, end_date), expand = TRUE) +
+    theme(
+      legend.title = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    ) +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      color = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **SPENDING WEEKLY**
+
+```{r}
+ggplotly(
+  time_dataset %>%
+    filter(page_id %in% spenders_limit_mobile_low) %>%
+    mutate(
+      end_of_week = as.Date(cut(ad_creation_time, breaks = "week", start.on.monday = TRUE)) + 6,
+    ) %>%
+    group_by(page_name, end_of_week) %>%
+    summarise(by_week_thousands_spend = round(sum(avg_spend) / 1000, digits = 0)) %>%
+    ungroup() %>%
+    ggplot(aes(
+      x = end_of_week, y = by_week_thousands_spend, fill = page_name,
+      text = paste(
+        "Page:",
+        page_name,
+        "<br>Week:",
+        end_of_week,
+        "<br>Weekly spend:",
+        by_week_thousands_spend, "thousand CZK"
+      )
+    )) +
+    geom_col(width = 5.5) +
+    geom_vline(xintercept = as.numeric(election_date), color = "#563a3a", linetype = 2, linewidth = 0.2) +
+    geom_text(aes(x = election_date, y = 0, label = "elections"), color = "#22209F", vjust = -1, size = 3, fontface = "bold", check_overlap = TRUE) +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    scale_y_continuous(
+      breaks = seq(0, 5000, 500),
+      labels = seq(0, 5000, 500)
+    ) +
+    scale_x_date(date_breaks = "1 months", date_labels = "%d.%m.%y") +
+    coord_cartesian(xlim = c(start_date, end_date), expand = TRUE) +
+    theme(legend.title = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      fill = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+Audience
+=====================================
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### **GENDER** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "gender"
+x_lab <- "Proportion of ads targeting male audience"
+y_lab <- element_blank()
+title_lab <- paste(
+  "Gender targeting of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_high) %>%
+  mutate(page_name = reorder(page_name, avg_male)) %>%
+  ggplot(aes(x = avg_male, y = page_name, fill = avg_male, text = paste(
+    "Page:",
+    page_name,
+    "<br>Proportion of male audience:",
+    avg_male * 100, "%"
+  ))) +
+  geom_col() +
+  geom_vline(aes(xintercept = 0.5, color = "#db0b50")) +
+  scale_fill_gradient(
+    low = "#db1d0b", high = "#03457f",
+  ) +
+  scale_x_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, 0.25),
+    labels = c("0%", "25%", "50%", "75%", "100%"),
+    expand = c(0, 0)
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **AGE** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "age"
+fill_lab <- ""
+x_lab <- element_blank()
+y_lab <- element_blank()
+title_lab <- paste(
+  "Age of audience of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_low) %>%
+  select(
+    page_name,
+    avg_18_24,
+    avg_25_34,
+    avg_35_44,
+    avg_45_54,
+    avg_55_64,
+    avg_65_plus
+  ) %>%
+  pivot_longer(cols = 2:7, names_to = "age_group", values_to = "proportion", values_drop_na = TRUE) %>%
+  ggplot(aes(x = age_group, y = proportion, fill = page_name, text = paste(
+    "Page:",
+    page_name,
+    "<br>Proportion in age group:",
+    proportion * 100, "%"
+  ))) +
+  geom_col(position = "dodge2") +
+  scale_x_discrete(labels = c("18-24", "25-34", "35-44", "45-54", "55-64", "65+")) +
+  scale_fill_brewer(palette = "Paired") +
+  scale_y_continuous(
+    limits = c(0, 0.5),
+    breaks = seq(0, 0.5, 0.1),
+    labels = c("0%", "10%", "20%", "30%", "40%", "50%")
+  ) +
+  theme_minimal() +
+  theme(legend.title = element_blank()) +
+  labs(
+    fill = fill_lab,
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **GENDER & AGE SUMMARY TABLE** {.no-mobile}
+
+```{r}
+summary_dataset %>%
+  select(c(1:2), 14:36) %>%
+  setNames(gsub("avg_", "", names(.))) %>%
+  reactable(
+    defaultPageSize = 15,
+    theme = nytimes(),
+    highlight = TRUE,
+    defaultSorted = c("page_name"),
+    filterable = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(filterable = FALSE, format = colFormat(percent = TRUE, digits = 1)),
+    columns = list(
+      "page_name" = colDef(name = "Page Name", filterable = TRUE, width = 120),
+      "page_id" = colDef(name = "Page ID", width = 120),
+      "female_65_plus" = colDef(width = 110)
+    )
+  )
+```
+
+### **REGIONAL** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "regions_audience"
+fill_lab <- ""
+x_lab <- element_blank()
+y_lab <- element_blank()
+title_lab <- paste(
+  "Regions of audience of ads of presidential candidates since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- summary_dataset %>%
+  filter(total_ads > min_ads & page_id %in% spenders_limit_low) %>%
+  select(
+    page_name,
+    avg_pha,
+    avg_stc,
+    avg_jhc,
+    avg_plk,
+    avg_kvk,
+    avg_ulk,
+    avg_lbk,
+    avg_hkk,
+    avg_pak,
+    avg_vys,
+    avg_jhm,
+    avg_olk,
+    avg_msk,
+    avg_zlk
+  ) %>%
+  pivot_longer(cols = 2:15, names_to = "region_group", values_to = "proportion", values_drop_na = TRUE) %>%
+  ggplot(aes(x = region_group, y = proportion, fill = page_name, text = paste(
+    "Page:",
+    page_name,
+    "<br>Proportion in region:",
+    proportion * 100, "%"
+  ))) +
+  geom_col(position = "dodge2") +
+  scale_x_discrete(labels = c("HKK", "JHC", "JHM", "KVK", "LBK", "MSK", "OLK", "PAK", "PHA", "PLK", "STC", "ULK", "VYS", "ZLK")) +
+  scale_fill_brewer(palette = "Paired") +
+  scale_y_continuous(
+    limits = c(0, 0.5),
+    breaks = seq(0, 0.5, 0.1),
+    labels = c("0%", "10%", "20%", "30%", "40%", "50%")
+  ) +
+  theme_minimal() +
+  theme(legend.title = element_blank()) +
+  labs(
+    fill = fill_lab,
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+
+### **REGION SUMMARY TABLE** {.no-mobile}
+
+```{r}
+summary_dataset %>%
+  select(c(1:2), 37:ncol(.)) %>%
+  setNames(gsub("avg_", "", names(.))) %>%
+  reactable(
+    defaultPageSize = 15,
+    theme = nytimes(),
+    highlight = TRUE,
+    defaultSorted = c("page_name"),
+    filterable = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(filterable = FALSE, format = colFormat(percent = TRUE, digits = 1)),
+    columns = list(
+      "page_name" = colDef(name = "Page Name", sticky = "left", filterable = TRUE, width = 120),
+      "page_id" = colDef(name = "Page ID", sticky = "left", width = 120)
+    )
+  )
+```
+
+
+### **TOP SPENDERS BY REGION** {.no-mobile}
+
+```{r include=FALSE}
+plot_name <- "regions_spenders"
+fill_lab <- ""
+x_lab <- element_blank()
+y_lab <- "CZK thousand"
+title_lab <- paste(
+  "Spending of presidential candidates by region since",
+  format(start_date, "%d.%m.%Y")
+)
+```
+
+```{r}
+plot <- regional_spenders %>%
+  group_by(region) %>%
+  slice_max(regional_spend, n = params$spenders_limit_low) %>%
+  ungroup() %>%
+  mutate(
+    regional_spend_1000 = round(regional_spend / 1000, 0),
+    page_name = reorder(page_name, regional_spend_1000)
+  ) %>%
+  ggplot(
+    aes(
+      x = region,
+      y = regional_spend_1000,
+      fill = page_name,
+      text = paste(
+        "Page:",
+        page_name,
+        "<br>Regional spend:",
+        regional_spend_1000,
+        "thousand CZK"
+      )
+    )
+  ) +
+  geom_col(position = "dodge2") +
+  scale_x_discrete(
+    labels = c(
+      "HKK",
+      "JHC",
+      "JHM",
+      "KVK",
+      "LBK",
+      "MSK",
+      "OLK",
+      "PAK",
+      "PHA",
+      "PLK",
+      "STC",
+      "ULK",
+      "VYS",
+      "ZLK"
+    )
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 1000, 100),
+    labels = seq(0, 1000, 100)
+  ) +
+  theme_minimal() +
+  theme(legend.title = element_blank(), legend.position = "none") +
+  labs(
+    fill = fill_lab,
+    x = x_lab,
+    y = y_lab,
+    title = title_lab
+  )
+
+plot_interactive <-
+  ggplotly(plot, tooltip = "text") %>% config(displaylogo = FALSE)
+
+plot_interactive
+```
+
+```{r include=FALSE}
+# Save plots
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
+```
+
+### **TOP SPENDERS BY REGION TABLE** {.no-mobile}
+
+```{r}
+regional_spenders %>%
+  pivot_wider(names_from = "region", values_from = "regional_spend") %>%
+  setNames(gsub("avg_", "", names(.))) %>%
+  select(
+    "page_name",
+    "page_id",
+    "hkk",
+    "jhc",
+    "jhm",
+    "kvk",
+    "lbk",
+    "msk",
+    "olk",
+    "pak",
+    "pha",
+    "plk",
+    "stc",
+    "ulk",
+    "vys",
+    "zlk"
+  ) %>%
+  reactable(
+    defaultPageSize = 15,
+    theme = nytimes(),
+    highlight = TRUE,
+    defaultSorted = c("page_name"),
+    filterable = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(
+      filterable = FALSE,
+      format = colFormat(
+        prefix = "CZK ",
+        separators = TRUE,
+        digits = 0
+      )
+    ),
+    columns = list(
+      "page_name" = colDef(
+        name = "Page Name",
+        sticky = "left",
+        width = 120,
+        format = colFormat()
+      ),
+      "page_id" = colDef(
+        name = "Page ID",
+        sticky = "left",
+        width = 120,
+        format = colFormat()
+      )
+    )
+  )
+```
+
+Column {.tabset .mobile}
+-----------------------------------------------------------------------
+
+### **GENDER**
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_high) %>%
+    mutate(page_name = reorder(page_name, avg_male)) %>%
+    ggplot(aes(x = avg_male, y = page_name, fill = avg_male, text = paste(
+      "Page:",
+      page_name,
+      "<br>Proportion of male audience:",
+      avg_male * 100, "%"
+    ))) +
+    geom_col() +
+    geom_vline(aes(xintercept = 0.5, color = "#db0b50")) +
+    scale_fill_gradient(
+      low = "#db1d0b", high = "#03457f",
+    ) +
+    scale_x_continuous(
+      limits = c(0, 1),
+      breaks = seq(0, 1, 0.25),
+      labels = c("0%", "25%", "50%", "75%", "100%"),
+      expand = c(0, 0)
+    ) +
+    scale_y_discrete(label = function(x) str_trunc(x, 16)) +
+    theme_minimal() +
+    theme(legend.position = "none") +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      fill = element_blank()
+    ),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **AGE**
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_low) %>%
+    select(
+      page_name,
+      avg_18_24,
+      avg_25_34,
+      avg_35_44,
+      avg_45_54,
+      avg_55_64,
+      avg_65_plus
+    ) %>%
+    pivot_longer(cols = 2:7, names_to = "age_group", values_to = "proportion", values_drop_na = TRUE) %>%
+    ggplot(aes(x = age_group, y = proportion, fill = page_name, text = paste(
+      "Page:",
+      page_name,
+      "<br>Proportion in age group:",
+      proportion * 100, "%"
+    ))) +
+    geom_col(position = "dodge2") +
+    scale_x_discrete(labels = c("18-24", "25-34", "35-44", "45-54", "55-64", "65+")) +
+    scale_fill_brewer(palette = "Paired") +
+    scale_y_continuous(
+      limits = c(0, 0.5),
+      breaks = seq(0, 0.5, 0.1),
+      labels = c("0%", "10%", "20%", "30%", "40%", "50%")
+    ) +
+    theme_minimal() +
+    theme(legend.title = element_blank(), legend.position = "none") +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      fill = element_blank()
+    ) +
+    coord_flip(),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+### **GENDER & AGE SUMMARY TABLE**
+
+```{r}
+summary_dataset %>%
+  select(c(1:2), 14:36) %>%
+  setNames(gsub("avg_", "", names(.))) %>%
+  reactable(
+    defaultPageSize = 15,
+    theme = nytimes(),
+    highlight = TRUE,
+    defaultSorted = c("page_name"),
+    filterable = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(filterable = FALSE, format = colFormat(percent = TRUE, digits = 1)),
+    columns = list(
+      "page_name" = colDef(name = "Page Name", filterable = TRUE, width = 70),
+      "page_id" = colDef(name = "Page ID", width = 50),
+      "female_65_plus" = colDef(width = 110)
+    )
+  )
+```
+
+### **REGIONAL**
+
+```{r}
+ggplotly(
+  summary_dataset %>%
+    filter(total_ads > min_ads & page_id %in% spenders_limit_mobile_low) %>%
+    select(
+      page_name,
+      avg_pha,
+      avg_stc,
+      avg_jhc,
+      avg_plk,
+      avg_kvk,
+      avg_ulk,
+      avg_lbk,
+      avg_hkk,
+      avg_pak,
+      avg_vys,
+      avg_jhm,
+      avg_olk,
+      avg_msk,
+      avg_zlk
+    ) %>%
+    pivot_longer(cols = 2:15, names_to = "region_group", values_to = "proportion", values_drop_na = TRUE) %>%
+    ggplot(aes(x = region_group, y = proportion, fill = page_name, text = paste(
+      "Page:",
+      page_name,
+      "<br>Proportion in region:",
+      proportion * 100, "%"
+    ))) +
+    geom_col(position = "dodge2") +
+    scale_x_discrete(labels = c("HKK", "JHC", "JHM", "KVK", "LBK", "MSK", "OLK", "PAK", "PHA", "PLK", "STC", "ULK", "VYS", "ZLK")) +
+    scale_fill_brewer(palette = "Paired") +
+    scale_y_continuous(
+      limits = c(0, 0.5),
+      breaks = seq(0, 0.5, 0.1),
+      labels = c("0%", "10%", "20%", "30%", "40%", "50%")
+    ) +
+    theme_minimal() +
+    theme(legend.title = element_blank(), legend.position = "none") +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      fill = element_blank()
+    ) +
+    coord_flip(),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+
+### **REGION SUMMARY TABLE**
+
+```{r}
+summary_dataset %>%
+  select(c(1:2), 37:ncol(.)) %>%
+  setNames(gsub("avg_", "", names(.))) %>%
+  reactable(
+    defaultPageSize = 15,
+    theme = nytimes(),
+    highlight = TRUE,
+    defaultSorted = c("page_name"),
+    filterable = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(width = 55, filterable = FALSE, format = colFormat(percent = TRUE, digits = 1)),
+    columns = list(
+      "page_name" = colDef(name = "Page Name", sticky = "left", filterable = TRUE, width = 70),
+      "page_id" = colDef(name = "Page ID", sticky = "left", width = 50)
+    )
+  )
+```
+
+
+### **TOP SPENDERS BY REGION**
+
+```{r}
+ggplotly(
+  regional_spenders %>%
+    group_by(region) %>%
+    slice_max(regional_spend, n = params$spenders_limit_mobile_low) %>%
+    ungroup() %>%
+    mutate(
+      regional_spend_1000 = round(regional_spend / 1000, 0),
+      page_name = reorder(page_name, regional_spend_1000)
+    ) %>%
+    ggplot(
+      aes(
+        x = region,
+        y = regional_spend_1000,
+        fill = page_name,
+        text = paste(
+          "Page:",
+          page_name,
+          "<br>Regional spend:",
+          regional_spend_1000,
+          "thousand CZK"
+        )
+      )
+    ) +
+    geom_col(position = "dodge2") +
+    scale_x_discrete(
+      labels = c(
+        "HKK",
+        "JHC",
+        "JHM",
+        "KVK",
+        "LBK",
+        "MSK",
+        "OLK",
+        "PAK",
+        "PHA",
+        "PLK",
+        "STC",
+        "ULK",
+        "VYS",
+        "ZLK"
+      )
+    ) +
+    scale_y_continuous(
+      breaks = seq(0, 1000, 100),
+      labels = seq(0, 1000, 100)
+    ) +
+    theme_minimal() +
+    theme(legend.title = element_blank(), legend.position = "none") +
+    labs(
+      x = element_blank(),
+      y = element_blank(),
+      fill = element_blank()
+    ) +
+    coord_flip(),
+  tooltip = "text"
+) %>%
+  config(displayModeBar = FALSE)
+```
+
+
+### **TOP SPENDERS BY REGION TABLE**
+
+```{r}
+regional_spenders %>%
+  pivot_wider(names_from = "region", values_from = "regional_spend") %>%
+  setNames(gsub("avg_", "", names(.))) %>%
+  select(
+    "page_name",
+    "page_id",
+    "hkk",
+    "jhc",
+    "jhm",
+    "kvk",
+    "lbk",
+    "msk",
+    "olk",
+    "pak",
+    "pha",
+    "plk",
+    "stc",
+    "ulk",
+    "vys",
+    "zlk"
+  ) %>%
+  reactable(
+    defaultPageSize = 15,
+    theme = nytimes(),
+    highlight = TRUE,
+    defaultSorted = c("page_name"),
+    filterable = TRUE,
+    striped = TRUE,
+    defaultColDef = colDef(
+      filterable = FALSE,
+      format = colFormat(
+        prefix = "CZK ",
+        separators = TRUE,
+        digits = 0
+      )
+    ),
+    columns = list(
+      "page_name" = colDef(
+        name = "Page Name",
+        sticky = "left",
+        width = 120,
+        format = colFormat()
+      ),
+      "page_id" = colDef(
+        name = "Page ID",
+        sticky = "left",
+        width = 120,
+        format = colFormat()
+      )
+    )
+  )
+```
+
+```{r cleanup, include=FALSE}
+# Because the saveWidget function does not correctly delete the dependency files
+# which are used to create individual self-sustaining widgets, we have to delete
+# them using R functions. All non-html files in output folder are deleted.
+
+unlink(grep(
+  x = list.files(
+    path = interactive_dir,
+    recursive = TRUE,
+    full.names = TRUE
+  ),
+  pattern = "(.html)$",
+  invert = TRUE,
+  value = TRUE
+))
+```
