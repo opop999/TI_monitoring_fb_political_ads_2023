@@ -2,6 +2,8 @@
 
 [![Automated Facebook political ads extraction using API](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/fb_political_ads_extract.yml/badge.svg)](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/fb_political_ads_extract.yml)
 
+[![GitHub Pages](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/actions/workflows/pages/pages-build-deployment)
+
 [![Logo TI](https://www.transparentnivolby.cz/hrad2023/wp-content/themes/prezident2023/images/logo2023.svg)](https://www.transparentnivolby.cz/hrad2023/)
 
 # Transparency International (CZ) election monitoring: <br> [2023 Czech presidential elections](https://www.transparentnivolby.cz/komunalni-senat2022/)
@@ -11,7 +13,6 @@
 ### See [dashboard](https://opop999.github.io/TI_monitoring_fb_political_ads_2023/) with visualizations and [raw data](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/tree/master/data).
 
 ### For a previous similar workflow concerning the 2022 Czech municipal and senate elections, please see its [repository](https://github.com/opop999/TI_monitoring_fb_political_ads_2022) and [dashboard](https://opop999.github.io/TI_monitoring_fb_political_ads_2022/).
-
 
 ### For the 2021 Czech legislative elections workflow, see its [repository](https://github.com/opop999/TI_monitoring_fb_political_ads_2021) and [dashboard](https://opop999.github.io/TI_monitoring_fb_political_ads_2021/).
 
