@@ -15,6 +15,13 @@ output:
       - {title: "Project", icon: "ion-information-circled", href: "https://www.transparentnivolby.cz/"}
       - {title: "Author", icon: "ion-social-linkedin", href: "https://www.linkedin.com/in/ondrej-pekacek"}
       - {title: "Data", icon: "ion-cloud", href: "https://www.facebook.com/ads/library/"}
+params:
+  election_date: "2023-01-27"
+  start_date: "2022-07-01"
+  end_date: "2023-01-27"
+  packages: ["dplyr", "ggplot2", "forcats", "tidyr", "reactable", "reactablefmtr", "stringr", "plotly", "flexdashboard", "htmlwidgets"]
+  input_dir: "data"
+  output_dir: "data/html_plots"
 ---
 
 ```{css, echo=FALSE}
@@ -32,25 +39,21 @@ output:
 # Disable scientific notation of numbers
 options(scipen = 999)
 
-# Package names
-packages <- c("dplyr", "ggplot2", "forcats", "tidyr", "reactable", "reactablefmtr", "stringr", "plotly", "flexdashboard", "htmlwidgets")
-
 # Install packages not yet installed
-installed_packages <- packages %in% rownames(installed.packages())
+installed_packages <- params$packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
+  install.packages(params$packages[!installed_packages])
 }
 
 # Packages loading
-invisible(lapply(packages, library, character.only = TRUE))
+invisible(lapply(params$packages, library, character.only = TRUE))
 
 # Specify directory with datasets
-directory_datasets <- "data/"
 
 # Import datasets created in the previous script
-summary_dataset <- readRDS(file = paste0(directory_datasets, "summary_tables/merged_summary.rds"))
-time_dataset <- readRDS(file = paste0(directory_datasets, "summary_tables/time_summary.rds"))
-regional_spenders <- readRDS(file = paste0(directory_datasets, "summary_tables/regional_spenders.rds"))
+summary_dataset <- readRDS(file = file.path(params$input_dir, "summary_tables", "merged_summary.rds"))
+time_dataset <- readRDS(file = file.path(params$input_dir, "summary_tables", "time_summary.rds"))
+regional_spenders <- readRDS(file = file.path(params$input_dir, "summary_tables", "regional_spenders.rds"))
 
 # Select TOP 10 biggest spenders for plotting
 top_10_spenders <- summary_dataset %>%
@@ -58,18 +61,15 @@ top_10_spenders <- summary_dataset %>%
   select(page_name, page_id, avg_spend)
 
 # Election date for vertical line in the time-plots
-election_date <- as.Date("2023-01-27")
+election_date <- as.Date(params$election_date)
 
 # Graph zoom date end & beginning
-start_date <- as.Date("2022-08-01")
-end_date <- as.Date("2023-01-27")
-
-# Specify output directory for individual plots
-directory <- "data/html_plots"
+start_date <- as.Date(params$start_date)
+end_date <- as.Date(params$end_date)
 
 # Check whether output directory exists to save individual plots
-if (!dir.exists(directory)) {
-  dir.create(directory)
+if (!dir.exists(params$output_dir)) {
+  dir.create(params$output_dir)
 } else {
   print("Output directory already exists")
 }
@@ -131,7 +131,7 @@ plot_total_ads <- ggplotly(
 
 plot_total_ads
 
-# saveWidget(plot_total_ads, file = paste0(directory, "/plot_total_ads.html"))
+# saveWidget(plot_total_ads, file = paste0(params$output_dir, "/plot_total_ads.html"))
 ```
 
 ### **TOTAL SPENDING** {.no-mobile}
@@ -182,7 +182,7 @@ plot_total_spending <- ggplotly(
 
 plot_total_spending
 
-# saveWidget(plot_total_spending, file = paste0(directory, "/plot_total_spending.html"))
+# saveWidget(plot_total_spending, file = paste0(params$output_dir, "/plot_total_spending.html"))
 ```
 
 ### **AD LENGTH** {.no-mobile}
@@ -222,7 +222,7 @@ plot_ad_length <- ggplotly(
 
 plot_ad_length
 
-# saveWidget(plot_ad_length, file = paste0(directory, "/plot_ad_length.html"))
+# saveWidget(plot_ad_length, file = paste0(params$output_dir, "/plot_ad_length.html"))
 ```
 
 ### **AD RUNTIME** {.no-mobile}
@@ -261,7 +261,7 @@ plot_ad_runtime <- ggplotly(
 
 plot_ad_runtime
 
-# saveWidget(plot_ad_runtime, file = paste0(directory, "/plot_ad_runtime.html"))
+# saveWidget(plot_ad_runtime, file = paste0(params$output_dir, "/plot_ad_runtime.html"))
 ```
 
 ### **IMPRESSIONS** {.no-mobile}
@@ -315,7 +315,7 @@ plot_ad_impressions <- ggplotly(
 
 plot_ad_impressions
 
-# saveWidget(plot_ad_impressions, file = paste0(directory, "/plot_ad_impressions.html"))
+# saveWidget(plot_ad_impressions, file = paste0(params$output_dir, "/plot_ad_impressions.html"))
 ```
 
 ### **AVERAGE AUDIENCE** {.no-mobile}
@@ -361,7 +361,7 @@ plot_ad_audience <- ggplotly(
 
 plot_ad_audience
 
-# saveWidget(plot_ad_audience, file = paste0(directory, "/plot_ad_audience.html"))
+# saveWidget(plot_ad_audience, file = paste0(params$output_dir, "/plot_ad_audience.html"))
 ```
 
 ### **ADS SUMMARY TABLE** {.no-mobile}
@@ -751,7 +751,7 @@ plot_spend_over_time <- ggplotly(
 
 plot_spend_over_time
 
-# saveWidget(plot_spend_over_time, file = paste0(directory, "/plot_spend_over_time.html"))
+# saveWidget(plot_spend_over_time, file = paste0(params$output_dir, "/plot_spend_over_time.html"))
 ```
 
 ### **SPENDING WEEKLY** {.no-mobile}
@@ -798,7 +798,7 @@ plot_spend_weekly <- ggplotly(
 
 plot_spend_weekly
 
-# saveWidget(plot_spend_weekly, file = paste0(directory, "/plot_spend_weekly.html"))
+# saveWidget(plot_spend_weekly, file = paste0(params$output_dir, "/plot_spend_weekly.html"))
 ```
 
 Column {.tabset .mobile}
@@ -952,7 +952,7 @@ plot_gender <- ggplotly(
 
 plot_gender
 
-# saveWidget(plot_gender, file = paste0(directory, "/plot_gender.html"))
+# saveWidget(plot_gender, file = paste0(params$output_dir, "/plot_gender.html"))
 ```
 
 ### **AGE** {.no-mobile}
@@ -997,7 +997,7 @@ plot_age <- ggplotly(
 
 plot_age
 
-# saveWidget(plot_age, file = paste0(directory, "/plot_age.html"))
+# saveWidget(plot_age, file = paste0(params$output_dir, "/plot_age.html"))
 ```
 
 ### **GENDER & AGE SUMMARY TABLE** {.no-mobile}
@@ -1072,7 +1072,7 @@ plot_region <- ggplotly(
 
 plot_region
 
-# saveWidget(plot_region, file = paste0(directory, "/plot_region.html"))
+# saveWidget(plot_region, file = paste0(params$output_dir, "/plot_region.html"))
 ```
 
 
@@ -1164,7 +1164,7 @@ plot_top_spenders_by_region <- ggplotly(
 
 plot_top_spenders_by_region
 
-# saveWidget(plot_top_spenders_by_region, file = paste0(directory, "/plot_top_spenders_by_region.html"))
+# saveWidget(plot_top_spenders_by_region, file = paste0(params$output_dir, "/plot_top_spenders_by_region.html"))
 ```
 
 
@@ -1524,7 +1524,7 @@ regional_spenders %>%
 
 unlink(grep(
   x = list.files(
-    path = directory,
+    path = params$output_dir,
     recursive = TRUE,
     full.names = TRUE
   ),
