@@ -1,4 +1,3 @@
-
 ```{r setup}
 # Package names
 packages <- c("jsonlite", "dplyr", "purrr")
@@ -30,9 +29,22 @@ candidates <- c(
 saveRDS(candidates, "numeric_ids_candidates.rds")
 ```
 
-```{js}
-// Function to enable saving to JSON
+In this workflow, we are interested in getting the FB page IDs for the biggest recent spenders according to the Meta Ad Library report webpage, which serves as a good overview in this regard. This allows us to have a wider context of who is spending on political advertising during the presidential election campaign period.
 
+```{r}
+# Setup the directory
+json_directory <- "fb_report_spenders"
+if (!dir.exists(file.path(json_directory))) {
+  dir.create(file.path(json_directory))
+} else {
+  print("Directory for JSON files already exists")
+}
+```
+
+Go to [Meta Ads Library](https://www.facebook.com/ads/library/report/?source=archive-landing-page&country=CZ) report and select an appropriate timeframe, such as last 90 days. Run the following code in the browser console (example [tutorial here](https://developer.chrome.com/docs/devtools/console/javascript/). Save the resulting JSON file in the data folder in the fb_report_spenders repository.
+
+```{js}
+// 1. Function to enable saving to JSON
 // e.g. console.save({hello: 'world'})
 (function(console) {
     console.save = function(data, filename) {
@@ -63,7 +75,8 @@ saveRDS(candidates, "numeric_ids_candidates.rds")
 }
 )(console);
 
-function top_ads_scrape(name, id, numbering, date_range) {
+// 2. Functions that extracts spenders' name and numeric id and saves to JSON
+function top_spenders_scrape(name, id, numbering, date_range) {
     // initiate empty dictionary
     var entities = {};
 
@@ -75,8 +88,7 @@ function top_ads_scrape(name, id, numbering, date_range) {
         for (let i = 0; i < len; i++) {
             entities[document.querySelectorAll(name)[i]?.innerText] = document.querySelectorAll(id)[i]?.attributes["href"].nodeValue.split("id=")[1];
         }
-    }
-    ;
+    };
 
     window.onload();
 
@@ -94,15 +106,14 @@ function top_ads_scrape(name, id, numbering, date_range) {
 
 // Specify the CSS selectors for each of the necessary elements on the FB ADS report page
 // IMPORTANT: All of these tend to vary over time as FB changes them. You need to likely go to the webpage and inspect the elements. Alternatively, get the report data as a CSV by clicking on the "export" button at the bottom of the page.
-top_ads_scrape(name = "a > div:nth-child(2) > span > div", // Div element which wraps the text in the first column of the table 
+top_spenders_scrape(name = "a > div:nth-child(2) > span > div", // Div element which wraps the text in the first column of the table 
                id = "#content > div > div > div > div> div > div > div > div > div > div> div > div > a", // an a element which contains the url to the profile together with the numeric id we need
                numbering = ".xdxwlmd span.x1swvt13.xuxw1ft", // Get the current page number from the span element below the table
                date_range = "div > div[role='heading'][aria-level='1']"); // Get the report date range from the div element above the table
 
-// Optional: automatic click to go to the next page
+// Optional: automatic click to go to the next page - you may need to change the button element as well
 document.querySelector("div > div > button:nth-child(3) > div > i").click()
 ```
-
 
 ```{r}
 # List all of the JSON data scraped from FB Ads library in the previous step
