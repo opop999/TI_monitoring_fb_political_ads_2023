@@ -26,11 +26,11 @@ params:
   plots_dir: "plots"
   plots_static_dir: "static_all"
   plots_interactive_dir: "interactive_all"
-  spenders_limit_high: 100
+  spenders_limit_high: 50
   spenders_limit_mobile_high: 20
   spenders_limit_low: 10
   spenders_limit_mobile_low: 10  
-  min_ads_filter: 10
+  min_ads_filter: 0
 ---
 
 ```{js, echo=FALSE}
