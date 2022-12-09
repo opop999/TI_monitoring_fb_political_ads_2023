@@ -33,15 +33,18 @@ options(scipen = 999)
 ############################### FUNCTION BEGGINING #############################
 
 get_all_tables_merge <- function(token, account_ids, min_date, max_date, regions, dir_name = "output", old_df = NA, new_df = "merged_dataset") {
+  if (nchar(token) < 50) {
+    stop("Token is missing or misspecified.")
+  }
 
-  if (nchar(token) < 50) { stop("Token is missing or misspecified.") }
-
-  if (!is.character(account_ids) | !is.vector(account_ids) | all(nchar(account_ids) < 1)) { stop("Account IDs not provided as a character vector or empty.") }
+  if (!is.character(account_ids) | !is.vector(account_ids) | all(nchar(account_ids) < 1)) {
+    stop("Account IDs not provided as a character vector or empty.")
+  }
 
   # A. SPECIFICATION PART OF THE FUNCTION
   # We need to specify the arguments we want to supply the Radlibrary functions
 
-  #Remove any NAs from the vector of usernames
+  # Remove any NAs from the vector of usernames
   account_ids <- account_ids[!is.na(account_ids)]
 
   if (!is.na(old_df)) {
@@ -57,17 +60,15 @@ get_all_tables_merge <- function(token, account_ids, min_date, max_date, regions
     account_ids <- account_ids[!account_ids %in% existing_fb_dataset_usernames$page_id]
   }
 
-  if (length(account_ids) == 0) { stop("There are no new accounts to add to the dataset, will not extract data.") }
+  if (length(account_ids) == 0) {
+    stop("There are no new accounts to add to the dataset, will not extract data.")
+  }
 
   fields_vector <- c("ad_data", "region_data", "demographic_data")
   table_type_vector <- c("ad", "region", "demographic")
 
-  # We initialize empty list to which we will add data
-  fb_ad_list <- vector(mode = "list", length = length(fields_vector))
-
-  # We will also name its three items with values from table_type_vector so we can
-  # refer to them further
-  names(fb_ad_list) <- table_type_vector
+  # We initialize empty list to which we will add data and name its three items with values from table_type_vector
+  fb_ad_list <- vector(mode = "list", length = length(fields_vector)) %>% setNames(table_type_vector)
 
   # We have to create a desired directory, if one does not yet exist
   if (!dir.exists(file.path(dir_name))) {
@@ -105,8 +106,8 @@ get_all_tables_merge <- function(token, account_ids, min_date, max_date, regions
       # The call is limited to 1000 results but pagination of overcomes it.
       # We pipe the output of the paginated call to the as_tibble function.
       fb_ad_list[[table_type_vector[i]]][[p]] <- adlib_get_paginated(query,
-                                                                     token = token,
-                                                                     max_gets = 200
+        token = token,
+        max_gets = 200
       ) %>%
         as_tibble(
           type = table_type_vector[i],
@@ -115,11 +116,7 @@ get_all_tables_merge <- function(token, account_ids, min_date, max_date, regions
     }
 
     Sys.sleep(runif(1, 0, 0.3))
-
   }
-
-  # saveRDS(object = fb_ad_list, file = paste0(dir_name, "fb_ad_list.rds"))
-
 
   # C. MERGE PART OF THE FUNCTION
   # After extraction of the three tables through the for loop, we transform
@@ -129,12 +126,14 @@ get_all_tables_merge <- function(token, account_ids, min_date, max_date, regions
   fb_ad_list[["ad"]] <- fb_ad_list[["ad"]] %>%
     bind_rows() %>%
     mutate(
+      id = as.character(id),
       ad_creation_time = as.Date(ad_creation_time),
       ad_delivery_start_time = as.Date(ad_delivery_start_time),
       ad_creative_bodies = map_chr(ad_creative_bodies, ~ ifelse(is.null(.x), "", .x[[1]])),
       ad_creative_link_captions = map_chr(ad_creative_link_captions, ~ ifelse(is.null(.x), "", .x[[1]])),
       ad_creative_link_titles = map_chr(ad_creative_link_titles, ~ ifelse(is.null(.x), "", .x[[1]])),
       languages = map_chr(languages, ~ ifelse(is.null(.x), NA, .x[[1]])),
+      page_id = as.character(page_id),
       publisher_platforms = map_chr(publisher_platforms, ~ ifelse(is.null(.x), NA, paste(.x, collapse = ", "))),
       ad_delivery_stop_time = as.Date(ifelse(
         is.na(ad_delivery_stop_time),
@@ -145,25 +144,12 @@ get_all_tables_merge <- function(token, account_ids, min_date, max_date, regions
     ) %>%
     distinct(id, .keep_all = TRUE)
 
-  fb_ad_list[["demographic"]] <- fb_ad_list[["demographic"]] %>%
-    bind_rows() %>%
-    unnest(col = "demographic_distribution") %>%
-    mutate(percentage = round(percentage, 3)) %>%
-    filter(age != "All (Automated App Ads)" |
-             gender != "All (Automated App Ads)") %>%
-    distinct(id, age, gender, .keep_all = TRUE) %>%
-    pivot_wider(
-      id_cols = id,
-      names_from = c(gender, age),
-      values_from = percentage,
-      names_sort = TRUE
-    )
 
   fb_ad_list[["region"]] <- fb_ad_list[["region"]] %>%
     bind_rows() %>%
     unnest(col = "delivery_by_region") %>%
     filter(region %in% regions) %>%
-    mutate(percentage = round(percentage, 3)) %>%
+    mutate(id = as.character(id), percentage = round(percentage, 3)) %>%
     distinct(id, region, .keep_all = TRUE) %>%
     pivot_wider(
       id_cols = id,
@@ -172,6 +158,19 @@ get_all_tables_merge <- function(token, account_ids, min_date, max_date, regions
       names_sort = TRUE
     )
 
+  fb_ad_list[["demographic"]] <- fb_ad_list[["demographic"]] %>%
+    bind_rows() %>%
+    unnest(col = "demographic_distribution") %>%
+    mutate(id = as.character(id), percentage = round(percentage, 3)) %>%
+    filter(age != "All (Automated App Ads)" |
+      gender != "All (Automated App Ads)") %>%
+    distinct(id, age, gender, .keep_all = TRUE) %>%
+    pivot_wider(
+      id_cols = id,
+      names_from = c(gender, age),
+      values_from = percentage,
+      names_sort = TRUE
+    )
   # Performing a left join on the common id column across the 3 datasets, remove
   # full duplicates and arrange by date.
   merged_dataset <- fb_ad_list[["ad"]] %>%
@@ -196,7 +195,6 @@ get_all_tables_merge <- function(token, account_ids, min_date, max_date, regions
   merged_dataset %>%
     select(page_name, page_id, ad_creative_bodies) %>%
     fwrite(paste0(file.path(dir_name, new_df), "_text_only.csv"))
-
 }
 
 ############################### FUNCTION END ###################################
@@ -225,7 +223,3 @@ get_all_tables_merge(
     "Zlín Region"
   )
 )
-
-
-
-

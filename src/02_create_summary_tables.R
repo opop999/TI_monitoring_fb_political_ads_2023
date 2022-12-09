@@ -31,7 +31,9 @@ ads_create_end_date <- as.Date("2023-01-27")
 ads_display_end_date <- as.Date("2023-01-27")
 
 full_ads_table <- readRDS(file.path(merged_dir, merged_df)) %>%
-  filter(ad_creation_time <= ads_create_end_date & ad_delivery_start_time <= ads_display_end_date)
+  filter(ad_creation_time <= ads_create_end_date & ad_delivery_start_time <= ads_display_end_date) %>%
+  mutate(across(where(is.numeric), ~replace_na(.x, 0)),
+         page_name = replace_na(page_name, "unknown_page"))
 
 if (!dir.exists(file.path(merged_dir, summary_dir))) {
   dir.create(file.path(merged_dir, summary_dir))
@@ -45,22 +47,47 @@ if (!dir.exists(file.path(merged_dir, summary_dir))) {
 # Percentage figures rounded to 3 decimal places
 ad_summary <- full_ads_table %>%
   arrange(ad_creation_time) %>%
-  select(1:21) %>%
-  # A small minority of ads is not in Czech currency and requires conversion
-  mutate(spend_lower = round(case_when(
-    currency == "CZK"  ~ spend_lower,
-    currency == "USD"  ~ spend_lower * usd_rate,
-    currency == "EUR"  ~ spend_lower * eur_rate,
-    currency == "PLN"  ~ spend_lower * pln_rate,
-    currency == "VND"  ~ spend_lower * vnd_rate
-  ), digits = 0),
-  spend_upper = round(case_when(
-    currency == "CZK"  ~ spend_upper,
-    currency == "USD"  ~ spend_upper * usd_rate,
-    currency == "EUR"  ~ spend_upper * eur_rate,
-    currency == "PLN"  ~ spend_upper * pln_rate,
-    currency == "VND"  ~ spend_upper * vnd_rate
-  ), digits = 0)) %>%
+  transmute(
+    id,
+    ad_creation_time,
+    ad_creative_bodies,
+    ad_creative_link_captions,
+    ad_creative_link_descriptions,
+    ad_creative_link_titles,
+    ad_delivery_start_time,
+    ad_delivery_stop_time,
+    ad_snapshot_url,
+    bylines,
+    currency,
+    languages,
+    page_id,
+    page_name,
+    publisher_platforms,
+    estimated_audience_size_lower,
+    estimated_audience_size_upper,
+    impressions_lower,
+    impressions_upper,
+    # A small minority of ads is not in Czech currency and requires conversion
+    spend_lower = round(
+      case_when(
+        currency == "CZK"  ~ spend_lower,
+        currency == "USD"  ~ spend_lower * usd_rate,
+        currency == "EUR"  ~ spend_lower * eur_rate,
+        currency == "PLN"  ~ spend_lower * pln_rate,
+        currency == "VND"  ~ spend_lower * vnd_rate
+      ),
+      digits = 0
+    ),
+    spend_upper = round(
+      case_when(
+        currency == "CZK"  ~ spend_upper,
+        currency == "USD"  ~ spend_upper * usd_rate,
+        currency == "EUR"  ~ spend_upper * eur_rate,
+        currency == "PLN"  ~ spend_upper * pln_rate,
+        currency == "VND"  ~ spend_upper * vnd_rate
+      ),
+      digits = 0
+    )) %>%
   group_by(page_id) %>%
   summarise(
     page_name = last(page_name),
@@ -82,7 +109,8 @@ ad_summary <- full_ads_table %>%
 # Percentage figures rounded to 3 decimal places
 demographic_summary <- full_ads_table %>%
   arrange(ad_creation_time) %>%
-  transmute(page_name,
+  transmute(
+    page_name,
     page_id,
     female_13_17 = `female_13-17`,
     female_18_24 = `female_18-24`,
@@ -99,7 +127,6 @@ demographic_summary <- full_ads_table %>%
     male_55_64 = `male_55-64`,
     male_65_plus = `male_65+`
   ) %>%
-  replace(is.na(.), 0) %>%
   group_by(page_id) %>%
   summarise(
     page_name = last(page_name),
@@ -128,7 +155,7 @@ demographic_summary <- full_ads_table %>%
     avg_55_64 = (avg_female_55_64 + avg_male_55_64),
     avg_65_plus = (avg_female_65_plus + avg_male_65_plus)
   ) %>%
-  mutate(across(4:26, round, digits = 3)) %>%
+  mutate(across(where(is.double), round, digits = 3)) %>%
   arrange(desc(total_ads)) %>%
   ungroup()
 
@@ -137,7 +164,8 @@ demographic_summary <- full_ads_table %>%
 # Percentage figures rounded to 3 decimal places
 region_summary <- full_ads_table %>%
   arrange(ad_creation_time) %>%
-  transmute(page_name,
+  transmute(
+    page_name = replace_na(page_name, "unknown_page"),
     page_id,
     pha = `Prague`,
     stc = `Central Bohemian Region`,
@@ -152,9 +180,7 @@ region_summary <- full_ads_table %>%
     jhm = `South Moravian Region`,
     olk = `Olomouc Region`,
     msk = `Moravian-Silesian Region`,
-    zlk = `Zlín Region`
-  ) %>%
-  replace(is.na(.), 0) %>%
+    zlk = `Zlín Region`) %>%
   group_by(page_id) %>%
   summarise(
     page_name = last(page_name),
@@ -174,7 +200,7 @@ region_summary <- full_ads_table %>%
     avg_msk = mean(msk),
     avg_zlk = mean(zlk)
   ) %>%
-  mutate(across(4:17, round, digits = 3)) %>%
+  mutate(across(where(is.double), round, digits = 3)) %>%
   arrange(desc(total_ads)) %>%
   ungroup()
 
@@ -184,10 +210,10 @@ time_summary <- full_ads_table %>%
   transmute(ad_creation_time,
             page_name,
             page_id,
-            avg_spend = (spend_lower + spend_upper) / 2
-            ) %>%
+            avg_spend = (spend_lower + spend_upper) / 2) %>%
   group_by(page_id) %>%
-  mutate(page_name = last(page_name), cumulative_spend = cumsum(avg_spend)) %>%
+  mutate(page_name = last(page_name),
+         cumulative_spend = cumsum(avg_spend)) %>%
   ungroup()
 
 saveRDS(time_summary, file.path(merged_dir, summary_dir, "time_summary.rds"))
@@ -220,7 +246,7 @@ regional_spenders <- merged_summary %>%
       "avg_zlk"
     )
   ) %>%
-  pivot_longer(4:17, names_to = "region", values_to = "spend_proportion") %>%
+  pivot_longer(-c("page_name", "page_id", "avg_spend"), names_to = "region", values_to = "spend_proportion") %>%
   transmute(page_name,
             page_id,
             region,
