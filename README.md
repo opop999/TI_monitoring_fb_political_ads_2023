@@ -10,7 +10,11 @@
 
 ## Analysis of political advertisement on Meta-owned platforms.
 
-### See [dashboard](https://opop999.github.io/TI_monitoring_fb_political_ads_2023/) with visualizations and [raw data](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/tree/master/data).
+### See [dashboard](https://opop999.github.io/TI_monitoring_fb_political_ads_2023/) with visualizations, [raw data](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/tree/master/output) and [individual graphs](https://github.com/opop999/TI_monitoring_fb_political_ads_2023/tree/master/output/plots).
+
+IMPORTANT: 
+There are **two interlinked dashboard versions**. The **default one** displays stats for **top Facebook Ads spenders** (out of a pool of TOP 500 based on FB Ad library report). 
+The **filtered dashboard version** is narrowed down to the **presidential candidates only** (see their names in the table below). You can **switch** between the dashboards by pressing the *show candidates only / show all* button on the top of the dashboard.
 
 ### For a previous similar workflow concerning the 2022 Czech municipal and senate elections, please see its [repository](https://github.com/opop999/TI_monitoring_fb_political_ads_2022) and [dashboard](https://opop999.github.io/TI_monitoring_fb_political_ads_2022/).
 
