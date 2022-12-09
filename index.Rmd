@@ -179,7 +179,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -247,7 +247,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -297,7 +297,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -347,7 +347,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -417,7 +417,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -474,7 +474,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -891,7 +891,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -957,7 +957,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -1131,7 +1131,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -1194,7 +1194,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -1287,7 +1287,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
@@ -1390,7 +1390,7 @@ plot_interactive
 
 ```{r include=FALSE}
 # Save plots
-ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot, "png", bg = "white")
+ggsave(paste0(file.path(static_dir, plot_name), ".png"), plot = plot, device = "png", bg = "white", units = "px", width = 3840, height = 2160)
 saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".html"))
 ```
 
