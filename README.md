@@ -39,9 +39,9 @@ The **filtered dashboard version** is narrowed down to the **presidential candid
 |:-------------------------------------|:----------------|
 |Andrej Babis    |214827221987263  |
 |Danuse Nerudova |102845669064210  |
-|Denisa Rohanova |171740986593382  |
 |Jaroslav Basta  |102389958091735  |
 |Josef Stredula  |1432139953751418 |
+|Karel Divis     |104231245492136  |
 |Marek Hilser    |280411075659709  |
 |Pavel Fischer   |1934837773438430 |
 |Petr Pavel      |102389958091735  |

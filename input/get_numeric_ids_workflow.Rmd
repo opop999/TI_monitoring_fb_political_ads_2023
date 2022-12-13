@@ -23,7 +23,8 @@ candidates <- c(
   "pavel_fischer" = "1934837773438430",
   "marek_hilser" = "280411075659709",
   "josef_stredula" = "1432139953751418",
-  "denisa_rohanova" = "171740986593382"
+  "karel_divis" = "104231245492136"
+  # "denisa_rohanova" = "171740986593382"
 )
 
 saveRDS(candidates, "numeric_ids_candidates.rds")
