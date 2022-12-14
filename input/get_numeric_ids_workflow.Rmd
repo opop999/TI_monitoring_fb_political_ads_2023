@@ -15,15 +15,15 @@ invisible(lapply(packages, library, character.only = TRUE))
 ```{r}
 # Specify presidential candidates and their numeric ids
 candidates <- c(
-  "jaroslav_basta" = "104240328634520",
-  "tomas_zima" = "236211929833146",
-  "petr_pavel" = "102389958091735",
-  "andrej_babis" = "214827221987263",
-  "danuse_nerudova" = "102845669064210",
-  "pavel_fischer" = "1934837773438430",
-  "marek_hilser" = "280411075659709",
-  "josef_stredula" = "1432139953751418",
-  "karel_divis" = "104231245492136"
+  "Jaroslav Bašta" = "104240328634520",
+  "Tomáš Zima" = "236211929833146",
+  "Petr Pavel" = "102389958091735",
+  "Andrej Babiš" = "214827221987263",
+  "Danuše Nerudová" = "102845669064210",
+  "Pavel Fischer" = "1934837773438430",
+  "Marek Hilšer" = "280411075659709",
+  "Josef Středula" = "1432139953751418",
+  "Karel Diviš" = "104231245492136"
   # "denisa_rohanova" = "171740986593382"
 )
 
@@ -136,11 +136,14 @@ remove_pages <-
     "ROLEX" = "288607211258386"
   )
 
-# Read all of the JSON data chunks in. 
+# Read all of the JSON data chunks in. Combine with election candidates to make sure
+# they are present even if they are not in the top 500 spenders.
 pages_list <- json_chunks %>% 
   map(read_json) %>% 
   unlist(recursive = TRUE) %>%
-  .[!. %in% remove_pages]
+  .[!. %in% remove_pages] %>% 
+  c(., candidates) %>% 
+  .[!duplicated(.)]
 
 # Save the list to the .rds file
 saveRDS(pages_list, "numeric_ids_all_saved_pages.rds")
