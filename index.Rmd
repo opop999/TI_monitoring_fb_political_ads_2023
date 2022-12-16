@@ -4,11 +4,14 @@ author: "Ondrej Pekacek & TI CZ"
 date: "`r format(Sys.Date(),'%d. %m. %Y')`"
 output: 
   flexdashboard::flex_dashboard:
-    logo: "input/dashboard/logo_ti.svg"
-    css: "input/dashboard/style.css"
+    self_contained: false
+    lib_dir: "./lib"
+    mathjax: null
+    logo: "https://www.transparentnivolby.cz/hrad2023/wp-content/themes/prezident2023/images/logo2023.svg"
+    css: "./input/dashboard/style.css"
     theme: readable
     includes:
-      in_header: "input/dashboard/header.html"
+      in_header: "./input/dashboard/header.html"
     orientation: columns
     vertical_layout: fill
     navbar:
@@ -33,17 +36,12 @@ params:
   min_ads_filter: 0
   social_description: "Monitoring of political and media communication before 2023 presidential elections in the Czech Republic. This dashboard focuses on the analysis of the paid political advertising on Meta platforms through the use of the FB Ads library access."
   social_url: "https://opop999.github.io/TI_monitoring_fb_political_ads_2023"
-  social_logo: "https://raw.githubusercontent.com/opop999/TI_monitoring_fb_political_ads_2023/master/input/dashboard/social_logo_ti.png"
+  social_preview: "https://www.transparentnivolby.cz/hrad2023/wp-content/uploads/sites/13/2022/11/Cover-TV-hrad-2023.png"
+  social_preview_w: "1844"
+  social_preview_h: "902"
   social_gh_repo: "opop999/TI_monitoring_fb_political_ads_2023"
 ---
 
-```{js, echo=FALSE}
-// Add pull-left class to logo
-document.querySelector("span.navbar-logo").classList.add("pull-left")
-// Add link wrapper to logo
-$("span.navbar-logo").wrap('<a href="https://www.transparentnivolby.cz/hrad2023/">');
-```
-    
 ```{r setup_load, include=FALSE}
 # Disable scientific notation of numbers
 options(scipen = 999)
@@ -57,6 +55,13 @@ if (any(installed_packages == FALSE)) {
 # Packages loading
 invisible(lapply(params$packages, library, character.only = TRUE))
 
+```
+
+```{js, echo=FALSE}
+// Add pull-left class to logo
+document.querySelector("span.navbar-logo").classList.add("pull-left")
+// Add link wrapper to logo
+$("span.navbar-logo").wrap('<a href="https://www.transparentnivolby.cz/hrad2023/">');
 ```
 
 ```{r setup_meta, echo=FALSE}
@@ -76,11 +81,19 @@ meta() %>%
   ) %>%
   meta_tag(
     "property" = "og:image",
-    content = params$social_logo
+    content = params$social_preview
+  ) %>%
+  meta_tag(
+    "property" = "og:image:width",
+    content = params$social_preview_w
+  ) %>%  
+  meta_tag(
+    "property" = "og:image:height",
+    content = params$social_preview_h
   ) %>%
   meta_tag(
     "property" = "og:image:alt",
-    content = "Project Logo"
+    content = "TI Project website preview"
   ) %>%
   meta_tag(
     "property" = "og:type",
@@ -108,7 +121,7 @@ meta() %>%
   ) %>%
   meta_tag(
     "name" = "twitter:image",
-    content = params$social_logo
+    content = params$social_preview
   ) %>%
   meta_tag(
     "name" = "twitter:image:alt",
@@ -116,7 +129,7 @@ meta() %>%
   ) %>%
   meta_tag(
     "name" = "twitter:card",
-    content = "summary"
+    content = "summary_large_image"
   )
 
 ```
