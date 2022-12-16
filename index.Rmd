@@ -147,7 +147,7 @@ spenders_limit_mobile_low <- summary_dataset %>%
 ```
 
 ```{r setup_params, include=FALSE}
-# # Graph zoom date end & beginning + election date for vertical line in the time-plots
+# Graph zoom date end & beginning + election date for vertical line in the time-plots
 election_date <- as.Date(params$election_date)
 start_date <- as.Date(params$start_date)
 end_date <- as.Date(params$end_date)
