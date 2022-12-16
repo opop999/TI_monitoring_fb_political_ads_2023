@@ -11,17 +11,17 @@ output:
       in_header: "input/dashboard/header.html"
     orientation: columns
     vertical_layout: fill
-    source_code: https://github.com/opop999/TI_monitoring_fb_political_ads_2023
     navbar:
       - {title: "Show all", icon: "ion-ios-people", href: "./index.html"}
       - {title: "Project", icon: "ion-information-circled", href: "https://www.transparentnivolby.cz/hrad2023/"}
       - {title: "Author", icon: "ion-social-linkedin", href: "https://www.linkedin.com/in/ondrej-pekacek"}
       - {title: "Data", icon: "ion-cloud", href: "https://www.facebook.com/ads/library/"}
+      - {title: "Source Code", icon: "ion-social-github", href: "https://github.com/opop999/TI_monitoring_fb_political_ads_2023"}
 params:
   election_date: "2023-01-27"
   start_date: "2022-07-01"
   end_date: "2023-01-27"
-  packages: ["dplyr", "ggplot2", "forcats", "tidyr", "reactable", "reactablefmtr", "stringr", "plotly", "flexdashboard", "htmlwidgets"]
+  packages: ["metathis", "dplyr", "ggplot2", "forcats", "tidyr", "reactable", "reactablefmtr", "stringr", "plotly", "flexdashboard", "htmlwidgets", "rmarkdown"]
   data_dir: "output"
   plots_dir: "plots"
   candidates_dir: "input"
@@ -32,6 +32,10 @@ params:
   spenders_limit_low: 10
   spenders_limit_mobile_low: 10  
   min_ads_filter: 0
+  social_description: "Monitoring of political and media communication before 2023 presidential elections in the Czech Republic. This dashboard focuses on the analysis of the paid political advertising on Meta platforms through the use of the FB Ads library access."
+  social_url: "https://opop999.github.io/TI_monitoring_fb_political_ads_2023"
+  social_logo: "https://raw.githubusercontent.com/opop999/TI_monitoring_fb_political_ads_2023/master/input/dashboard/social_logo_ti.png"
+  social_gh_repo: "opop999/TI_monitoring_fb_political_ads_2023"
 ---
 
 ```{js, echo=FALSE}
@@ -41,7 +45,7 @@ document.querySelector("span.navbar-logo").classList.add("pull-left")
 $("span.navbar-logo").wrap('<a href="https://www.transparentnivolby.cz/hrad2023/">');
 ```
     
-```{r setup, include=FALSE}
+```{r setup_load, include=FALSE}
 # Disable scientific notation of numbers
 options(scipen = 999)
 
@@ -53,7 +57,71 @@ if (any(installed_packages == FALSE)) {
 
 # Packages loading
 invisible(lapply(params$packages, library, character.only = TRUE))
+```
 
+```{r setup_meta, echo=FALSE}
+# Add meta tags for easier dashboard link sharing on social networks
+meta() %>%
+  meta_description(
+    params$social_description
+  ) %>%
+  meta_name("github-repo" = params$social_gh_repo) %>%
+  meta_tag(
+    "property" = "og:url",
+    content = params$social_url
+  ) %>%
+  meta_tag(
+    "property" = "og:description",
+    content = params$social_description
+  ) %>%
+  meta_tag(
+    "property" = "og:image",
+    content = params$social_logo
+  ) %>%
+  meta_tag(
+    "property" = "og:image:alt",
+    content = "Project Logo"
+  ) %>%
+  meta_tag(
+    "property" = "og:type",
+    content = "website"
+  ) %>%
+  meta_tag(
+    "property" = "og:locale",
+    content = "en_US"
+  ) %>%
+  meta_tag(
+    "property" = "article:author",
+    content = metadata$author
+  ) %>%
+  meta_tag(
+    "name" = "twitter:title",
+    content = metadata$title
+  ) %>%
+  meta_tag(
+    "name" = "twitter:description",
+    content = params$social_description
+  ) %>%
+  meta_tag(
+    "name" = "twitter:url",
+    content = params$social_url
+  ) %>%
+  meta_tag(
+    "name" = "twitter:image",
+    content = params$social_logo
+  ) %>%
+  meta_tag(
+    "name" = "twitter:image:alt",
+    content = "Project Logo"
+  ) %>%
+  meta_tag(
+    "name" = "twitter:card",
+    content = "summary"
+  )
+
+```
+
+```{r setup_data, include=FALSE}
 # Get election candidates ids for filtering
 candidates_id <- readRDS(file.path(params$candidates_dir, "numeric_ids_candidates.rds"))
 
@@ -79,7 +147,10 @@ spenders_limit_mobile_low <- summary_dataset %>%
   slice_max(avg_spend, n = params$spenders_limit_mobile_low) %>%
   pull(page_id)
 
-# # Graph zoom date end & beginning + election date for vertical line in the time-plots
+```
+
+```{r setup_params, include=FALSE}
+# Graph zoom date end & beginning + election date for vertical line in the time-plots
 election_date <- as.Date(params$election_date)
 start_date <- as.Date(params$start_date)
 end_date <- as.Date(params$end_date)
@@ -91,7 +162,9 @@ min_ads <- params$min_ads_filter
 output_dir <- file.path(params$data_dir, params$plots_dir)
 static_dir <- file.path(params$data_dir, params$plots_dir, params$plots_static_dir)
 interactive_dir <- file.path(params$data_dir, params$plots_dir, params$plots_interactive_dir)
+```
 
+```{r setup_dirs, include=FALSE}
 # Check whether output directory exists to save individual plots
 if (!dir.exists(output_dir)) {
   dir.create(output_dir)

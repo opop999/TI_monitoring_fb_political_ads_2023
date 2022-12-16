@@ -19,7 +19,7 @@ jobs:
       with:
         ref: master
     - name: 0. Install necessary packages
-      run: Rscript -e "install.packages(c('flexdashboard', 'plotly', 'htmlwidgets', 'reactable', 'reactablefmtr', 'blastula'), Ncpus = parallel::detectCores())"
+      run: Rscript -e "install.packages(c('metathis', 'flexdashboard', 'plotly', 'htmlwidgets', 'reactable', 'reactablefmtr', 'blastula'), Ncpus = parallel::detectCores())"
     - name: 1. Check validity of FB ADS API token
       env:
           FB_TOKEN: ${{ secrets.FB_TOKEN }}
