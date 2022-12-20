@@ -47,3 +47,25 @@ The **filtered dashboard version** is narrowed down to the **presidential candid
 |Petr Pavel      |102389958091735  |
 |Tomas Zima      |236211929833146  |
 
+***
+``` mermaid
+graph LR
+C[Extraction and analysis of political Meta Ads]
+D[Raw data and individual graphs]
+F[Dashboards]
+H[Presidential candidates]
+I[TOP 500 Spenders]
+J[Data updated daily with GH Actions]
+C --> D
+F --> H
+C --> F
+F --> I
+C --> J
+style C fill:#f9caef,stroke:#8a7bef
+style D fill:#f9efc4,stroke:#b9ef8a
+style F fill:#F9EFDC,stroke:#ef8a8a
+style H fill:#f9c9c9,stroke:#ef5151
+style I fill:#c4f9ef,stroke:#8aefb9
+style J fill:#C4E9F9,stroke:#ef8a7b
+
+```
