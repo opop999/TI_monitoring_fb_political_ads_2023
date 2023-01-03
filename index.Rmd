@@ -1173,7 +1173,7 @@ plot_name <- "gender"
 x_lab <- "Proportion of ads targeting male audience"
 y_lab <- element_blank()
 title_lab <- paste(
-  "Gender targeting of top",
+  "Gender of audience of top",
   length(spenders_limit_high),
   "spenders since",
   format(start_date, "%d.%m.%Y")
