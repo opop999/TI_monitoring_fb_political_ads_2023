@@ -1170,7 +1170,7 @@ Column {.tabset}
 
 ```{r include=FALSE}
 plot_name <- "gender"
-x_lab <- "Proportion of ads targeting male audience"
+x_lab <- "Proportion of ads displayed to male audience"
 y_lab <- element_blank()
 title_lab <- paste(
   "Gender of audience of top",
