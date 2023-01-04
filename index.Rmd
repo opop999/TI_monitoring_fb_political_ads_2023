@@ -1288,8 +1288,33 @@ saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".htm
 
 ```{r}
 summary_dataset %>%
-  select(c(1:2), 14:36) %>%
   setNames(gsub("avg_", "", names(.))) %>%
+  select(
+    c(
+      "page_id",
+      "page_name",
+      "female_18_24",
+      "female_25_34",
+      "female_35_44",
+      "female_45_54",
+      "female_55_64",
+      "female_65_plus",
+      "male_18_24",
+      "male_25_34",
+      "male_35_44",
+      "male_45_54",
+      "male_55_64",
+      "male_65_plus",
+      "female",
+      "male",
+      "18_24",
+      "25_34",
+      "35_44",
+      "45_54",
+      "55_64",
+      "65_plus"
+    )
+  ) %>%
   reactable(
     defaultPageSize = 15,
     theme = nytimes(),
@@ -1382,8 +1407,25 @@ saveWidget(plot_interactive, paste0(file.path(interactive_dir, plot_name), ".htm
 
 ```{r}
 summary_dataset %>%
-  select(c(1:2), 37:ncol(.)) %>%
   setNames(gsub("avg_", "", names(.))) %>%
+  select(
+      page_id,
+      page_name,
+      pha,
+      stc,
+      jhc,
+      plk,
+      kvk,
+      ulk,
+      lbk,
+      hkk,
+      pak,
+      vys,
+      jhm,
+      olk,
+      msk,
+      zlk
+  ) %>%
   reactable(
     defaultPageSize = 15,
     theme = nytimes(),
@@ -1623,8 +1665,33 @@ ggplotly(
 
 ```{r}
 summary_dataset %>%
-  select(c(1:2), 14:36) %>%
   setNames(gsub("avg_", "", names(.))) %>%
+  select(
+    c(
+      "page_id",
+      "page_name",
+      "female_18_24",
+      "female_25_34",
+      "female_35_44",
+      "female_45_54",
+      "female_55_64",
+      "female_65_plus",
+      "male_18_24",
+      "male_25_34",
+      "male_35_44",
+      "male_45_54",
+      "male_55_64",
+      "male_65_plus",
+      "female",
+      "male",
+      "18_24",
+      "25_34",
+      "35_44",
+      "45_54",
+      "55_64",
+      "65_plus"
+    )
+  ) %>%
   reactable(
     defaultPageSize = 15,
     theme = nytimes(),
@@ -1697,8 +1764,25 @@ ggplotly(
 
 ```{r}
 summary_dataset %>%
-  select(c(1:2), 37:ncol(.)) %>%
   setNames(gsub("avg_", "", names(.))) %>%
+  select(
+      page_id,
+      page_name,
+      pha,
+      stc,
+      jhc,
+      plk,
+      kvk,
+      ulk,
+      lbk,
+      hkk,
+      pak,
+      vys,
+      jhm,
+      olk,
+      msk,
+      zlk
+  ) %>%
   reactable(
     defaultPageSize = 15,
     theme = nytimes(),
