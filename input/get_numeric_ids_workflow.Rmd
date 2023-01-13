@@ -27,7 +27,13 @@ candidates <- c(
   # "denisa_rohanova" = "171740986593382"
 )
 
+# Specify duelists for the second election round
+duelists <- c("")
+
+# Save as RDS file
 saveRDS(candidates, "numeric_ids_candidates.rds")
+saveRDS(duelists, "numeric_ids_duelists.rds")
+
 ```
 
 In this workflow, we are interested in getting the FB page IDs for the biggest recent spenders according to the Meta Ad Library report webpage, which serves as a good overview in this regard. This allows us to have a wider context of who is spending on political advertising during the presidential election campaign period.

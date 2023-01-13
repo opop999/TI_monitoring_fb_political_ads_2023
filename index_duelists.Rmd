@@ -1,5 +1,5 @@
 ---
-title: "Facebook ADS Candidates"
+title: "Facebook ADS Duelists"
 author: "Ondrej Pekacek & TI CZ"
 date: "`r format(Sys.Date(),'%d. %m. %Y')`"
 output: 
@@ -28,8 +28,8 @@ params:
   data_dir: "output"
   plots_dir: "plots"
   numeric_id_dir: "input"
-  plots_static_dir: "static_candidates"
-  plots_interactive_dir: "interactive_candidates"
+  plots_static_dir: "static_duelists"
+  plots_interactive_dir: "interactive_duelists"
   spenders_limit_high: 50
   spenders_limit_mobile_high: 20
   spenders_limit_low: 10
@@ -134,13 +134,13 @@ meta() %>%
 ```
 
 ```{r setup_data, include=FALSE}
-# Get election candidates ids for filtering
-candidates_id <- readRDS(file.path(params$numeric_id_dir, "numeric_ids_candidates.rds"))
+# Get election duelists ids for filtering
+duelists_id <- readRDS(file.path(params$numeric_id_dir, "numeric_ids_duelists.rds"))
 
 # Import datasets created in the previous script
-summary_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "merged_summary.rds")) %>% filter(page_id %in% candidates_id)
-time_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "time_summary.rds")) %>% filter(page_id %in% candidates_id)
-regional_spenders <- readRDS(file.path(params$data_dir, "summary_tables", "regional_spenders.rds")) %>% filter(page_id %in% candidates_id)
+summary_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "merged_summary.rds")) %>% filter(page_id %in% duelists_id)
+time_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "time_summary.rds")) %>% filter(page_id %in% duelists_id)
+regional_spenders <- readRDS(file.path(params$data_dir, "summary_tables", "regional_spenders.rds")) %>% filter(page_id %in% duelists_id)
 
 # Select top spenders for different plot sizes
 spenders_limit_high <- summary_dataset %>%
