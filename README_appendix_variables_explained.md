@@ -6,11 +6,11 @@
 
 ### Key disclaimers to the research:
 
--Only entites with at least one political ad since 13 April 2022 are included in the summary tables.
+-Only entites with at least one political ad ran since 1st July 2022 are included in the summary tables.
 
 -Some monitored ads are not textual and only contain image/video, so we cannot assess their length in words.
 
--A small minority of ads in other currency than CZK have been converted according to the Czech National Bank (CNB) exchange rate on 17th September, 2022
+-A small minority of ads in other currency than CZK have been converted according to the Czech National Bank (CNB) exchange rate on 7th December, 2022
 * For some currencies, such as VND, CNB does not provide daily exchange rate. In this case, monthly exchange rate is used.
 
 -We had to exclude a couple of advertisers from our coverage due to the limitations on the part of the Facebook Ads API. 
@@ -28,6 +28,8 @@
 -Only Czech regions are included in the region summary & merged tables. 
 
 -In the demographic & merged tables, we did not include the columns of *unknown gender*, because the vast majority of the values were equal to 0 or less than 0.1 %. 
+
+-Some ads *do not have gender or region information*. We remove them for the purpose of our demographic calculations, otherwise their sums (for instance female + male proportion) would not add to 100%, which could be misleading in graphs. This affects about 5% of all ads - especially those with very low budget (<100 CZK).
 
 -Computed variables, such as *total_avg_impressions* are rounded to the whole number.
  
