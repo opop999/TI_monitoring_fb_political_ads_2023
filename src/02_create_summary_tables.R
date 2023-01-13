@@ -82,7 +82,8 @@ ad_summary <- full_ads_table %>%
         currency == "EUR" ~ spend_lower * eur_rate,
         currency == "PLN" ~ spend_lower * pln_rate,
         currency == "VND" ~ spend_lower * vnd_rate
-      )),
+      )
+    ),
     spend_upper = round(
       case_when(
         is.na(spend_upper) ~ as.numeric(spend_lower),
@@ -91,7 +92,9 @@ ad_summary <- full_ads_table %>%
         currency == "EUR" ~ spend_upper * eur_rate,
         currency == "PLN" ~ spend_upper * pln_rate,
         currency == "VND" ~ spend_upper * vnd_rate
-      ))) %>%
+      )
+    )
+  ) %>%
   # Calculate group statistics for each spender
   group_by(page_id) %>%
   summarise(
@@ -139,16 +142,16 @@ demographic_summary <- full_ads_table %>%
     male_65_plus = `male_65+`
   ) %>%
   # Replace NAs with 0s, sum gender stats for each ad.
-  mutate(across(where(is.numeric), ~replace_na(.x, 0)),
-         total_male = rowSums(across(starts_with("male"))),
-         total_female = rowSums(across(starts_with("female"))),
-         total_13_17 = rowSums(across(contains("13_17"))),
-         total_18_24 = rowSums(across(contains("18_24"))),
-         total_25_34 = rowSums(across(contains("25_34"))),
-         total_35_44 = rowSums(across(contains("35_44"))),
-         total_45_54 = rowSums(across(contains("45_54"))),
-         total_55_64 = rowSums(across(contains("55_64"))),
-         total_65_plus = rowSums(across(contains("65_plus")))
+  mutate(across(where(is.numeric), ~ replace_na(.x, 0)),
+    total_male = rowSums(across(starts_with("male"))),
+    total_female = rowSums(across(starts_with("female"))),
+    total_13_17 = rowSums(across(contains("13_17"))),
+    total_18_24 = rowSums(across(contains("18_24"))),
+    total_25_34 = rowSums(across(contains("25_34"))),
+    total_35_44 = rowSums(across(contains("35_44"))),
+    total_45_54 = rowSums(across(contains("45_54"))),
+    total_55_64 = rowSums(across(contains("55_64"))),
+    total_65_plus = rowSums(across(contains("65_plus")))
   ) %>%
   # Eliminate ads which do not have demographic information
   filter(total_male > 0 | total_female > 0) %>%
@@ -204,10 +207,12 @@ region_summary <- full_ads_table %>%
     reg_jhm = `South Moravian Region`,
     reg_olk = `Olomouc Region`,
     reg_msk = `Moravian-Silesian Region`,
-    reg_zlk = `Zlín Region`) %>%
+    reg_zlk = `Zlín Region`
+  ) %>%
   # Replace NAs with 0s, sum region stats for each ad.
-  mutate(across(where(is.numeric), ~replace_na(.x, 0)),
-         total_regions = rowSums(across(starts_with("reg")))) %>%
+  mutate(across(where(is.numeric), ~ replace_na(.x, 0)),
+    total_regions = rowSums(across(starts_with("reg")))
+  ) %>%
   # Eliminate ads which do not have region information
   filter(total_regions > 0) %>%
   group_by(page_id) %>%
@@ -236,12 +241,15 @@ region_summary <- full_ads_table %>%
 time_summary <- full_ads_table %>%
   arrange(ad_creation_time) %>%
   transmute(ad_creation_time,
-            page_name,
-            page_id,
-            avg_spend = (spend_lower + spend_upper) / 2) %>%
+    page_name,
+    page_id,
+    avg_spend = (spend_lower + spend_upper) / 2
+  ) %>%
   group_by(page_id) %>%
-  mutate(page_name = last(page_name),
-         cumulative_spend = cumsum(avg_spend)) %>%
+  mutate(
+    page_name = last(page_name),
+    cumulative_spend = cumsum(avg_spend)
+  ) %>%
   ungroup()
 
 # Combine ad, demographic and region table to one - "merged_summary". -------
@@ -252,29 +260,30 @@ merged_summary <- ad_summary %>%
 # Calculate top spenders for each of the regions --------------------------
 regional_spenders <- merged_summary %>%
   select(
-      page_name,
-      page_id,
-      avg_spend,
-      avg_pha,
-      avg_stc,
-      avg_jhc,
-      avg_plk,
-      avg_kvk,
-      avg_ulk,
-      avg_lbk,
-      avg_hkk,
-      avg_pak,
-      avg_vys,
-      avg_jhm,
-      avg_olk,
-      avg_msk,
-      avg_zlk
+    page_name,
+    page_id,
+    avg_spend,
+    avg_pha,
+    avg_stc,
+    avg_jhc,
+    avg_plk,
+    avg_kvk,
+    avg_ulk,
+    avg_lbk,
+    avg_hkk,
+    avg_pak,
+    avg_vys,
+    avg_jhm,
+    avg_olk,
+    avg_msk,
+    avg_zlk
   ) %>%
   pivot_longer(-c("page_name", "page_id", "avg_spend"), names_to = "region", values_to = "spend_proportion") %>%
   transmute(page_name,
-            page_id,
-            region,
-            regional_spend = round(avg_spend * spend_proportion))
+    page_id,
+    region,
+    regional_spend = round(avg_spend * spend_proportion)
+  )
 
 # Save summarized datasets ------------------------------------------------
 saveRDS(time_summary, file.path(merged_dir, summary_dir, "time_summary.rds"))
@@ -282,4 +291,3 @@ fwrite(merged_summary, file.path(merged_dir, summary_dir, "merged_summary.csv"))
 saveRDS(merged_summary, file.path(merged_dir, summary_dir, "merged_summary.rds"))
 fwrite(regional_spenders, file.path(merged_dir, summary_dir, "regional_spenders.csv"))
 saveRDS(regional_spenders, file.path(merged_dir, summary_dir, "regional_spenders.rds"))
-

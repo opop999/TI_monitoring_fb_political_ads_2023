@@ -1324,8 +1324,8 @@ summary_dataset %>%
     striped = TRUE,
     defaultColDef = colDef(filterable = FALSE, format = colFormat(percent = TRUE, digits = 1)),
     columns = list(
-      "page_name" = colDef(name = "Page Name", filterable = TRUE, width = 120),
-      "page_id" = colDef(name = "Page ID", width = 120),
+      "page_name" = colDef(name = "Page Name", sticky = "left", filterable = TRUE, width = 120),
+      "page_id" = colDef(name = "Page ID", sticky = "left", width = 120),
       "female_65_plus" = colDef(width = 110)
     )
   )
@@ -1701,8 +1701,8 @@ summary_dataset %>%
     striped = TRUE,
     defaultColDef = colDef(filterable = FALSE, format = colFormat(percent = TRUE, digits = 1)),
     columns = list(
-      "page_name" = colDef(name = "Page Name", filterable = TRUE, width = 70),
-      "page_id" = colDef(name = "Page ID", width = 50),
+      "page_name" = colDef(name = "Page Name", sticky = "left", filterable = TRUE, width = 70),
+      "page_id" = colDef(name = "Page ID", sticky = "left", width = 50),
       "female_65_plus" = colDef(width = 110)
     )
   )
