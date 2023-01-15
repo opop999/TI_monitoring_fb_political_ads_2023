@@ -28,7 +28,8 @@ candidates <- c(
 )
 
 # Specify duelists for the second election round
-duelists <- c("")
+duelists <- c("Petr Pavel" = "102389958091735",
+              "Andrej Babiš" = "214827221987263")
 
 # Save as RDS file
 saveRDS(candidates, "numeric_ids_candidates.rds")
