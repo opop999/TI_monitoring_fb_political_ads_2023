@@ -44,7 +44,6 @@ jobs:
       run: Rscript -e "rmarkdown::render('index_duelists.Rmd')"
     - name: 5. Print information about the session
       run: Rscript -e "sessionInfo()"
-    # TO DO: Add index_duelists.html to git add
     - name: 6. Commit newly updated files
       run: |
         git config --global --add safe.directory /__w/TI_monitoring_fb_political_ads_2023/TI_monitoring_fb_political_ads_2023
