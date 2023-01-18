@@ -1,5 +1,5 @@
 ---
-title: "Facebook ADS Duelists"
+title: "FB Ads All"
 author: "Ondrej Pekacek & TI CZ"
 date: "`r format(Sys.Date(),'%d. %m. %Y')`"
 output: 
@@ -15,7 +15,8 @@ output:
     orientation: columns
     vertical_layout: fill
     navbar:
-      - {title: "Show all", icon: "ion-ios-people", href: "./index.html"}
+      - {title: "Duelists", icon: "ion-person-stalker", href: "./index.html"}            
+      - {title: "Candidates", icon: "ion-ios-people", href: "./index_candidates.html"}
       - {title: "Project", icon: "ion-information-circled", href: "https://www.transparentnivolby.cz/hrad2023"}
       - {title: "Author", icon: "ion-social-linkedin", href: "https://www.linkedin.com/in/ondrej-pekacek"}
       - {title: "Data", icon: "ion-cloud", href: "https://www.facebook.com/ads/library"}
@@ -27,9 +28,8 @@ params:
   packages: ["metathis", "dplyr", "ggplot2", "forcats", "tidyr", "reactable", "reactablefmtr", "stringr", "plotly", "flexdashboard", "htmlwidgets", "rmarkdown"]
   data_dir: "output"
   plots_dir: "plots"
-  numeric_id_dir: "input"
-  plots_static_dir: "static_duelists"
-  plots_interactive_dir: "interactive_duelists"
+  plots_static_dir: "static_all"
+  plots_interactive_dir: "interactive_all"
   spenders_limit_high: 50
   spenders_limit_mobile_high: 20
   spenders_limit_low: 10
@@ -43,13 +43,6 @@ params:
   social_gh_repo: "opop999/TI_monitoring_fb_political_ads_2023"
 ---
 
-```{js, echo=FALSE}
-// Add pull-left class to logo
-document.querySelector("span.navbar-logo").classList.add("pull-left")
-// Add link wrapper to logo
-$("span.navbar-logo").wrap('<a href="https://www.transparentnivolby.cz/hrad2023/">');
-```
-    
 ```{r setup_load, include=FALSE}
 # Disable scientific notation of numbers
 options(scipen = 999)
@@ -62,6 +55,14 @@ if (any(installed_packages == FALSE)) {
 
 # Packages loading
 invisible(lapply(params$packages, library, character.only = TRUE))
+
+```
+
+```{js, echo=FALSE}
+// Add pull-left class to logo
+document.querySelector("span.navbar-logo").classList.add("pull-left")
+// Add link wrapper to logo
+$("span.navbar-logo").wrap('<a href="https://www.transparentnivolby.cz/hrad2023/">');
 ```
 
 ```{r setup_meta, echo=FALSE}
@@ -131,18 +132,17 @@ meta() %>%
     "name" = "twitter:card",
     content = "summary_large_image"
   )
+
 ```
 
 ```{r setup_data, include=FALSE}
-# Get election duelists ids for filtering
-duelists_id <- readRDS(file.path(params$numeric_id_dir, "numeric_ids_duelists.rds"))
-
 # Import datasets created in the previous script
-summary_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "merged_summary.rds")) %>% filter(page_id %in% duelists_id)
-time_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "time_summary.rds")) %>% filter(page_id %in% duelists_id)
-regional_spenders <- readRDS(file.path(params$data_dir, "summary_tables", "regional_spenders.rds")) %>% filter(page_id %in% duelists_id)
+summary_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "merged_summary.rds"))
+time_dataset <- readRDS(file.path(params$data_dir, "summary_tables", "time_summary.rds"))
+regional_spenders <- readRDS(file.path(params$data_dir, "summary_tables", "regional_spenders.rds"))
 
 # Select top spenders for different plot sizes
+
 spenders_limit_high <- summary_dataset %>%
   slice_max(avg_spend, n = params$spenders_limit_high) %>%
   pull(page_id)
@@ -158,7 +158,6 @@ spenders_limit_mobile_high <- summary_dataset %>%
 spenders_limit_mobile_low <- summary_dataset %>%
   slice_max(avg_spend, n = params$spenders_limit_mobile_low) %>%
   pull(page_id)
-
 ```
 
 ```{r setup_params, include=FALSE}
@@ -213,7 +212,9 @@ fill_lab <- "Proportion unique ads"
 x_lab <- "Total ads"
 y_lab <- element_blank()
 title_lab <- paste(
-  "Total ads of presidential candidates since",
+  "Total ads of top",
+  length(spenders_limit_high),
+  "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -277,7 +278,7 @@ fill_lab <- "Per ad (CZK thousands)"
 x_lab <- "Total spend (CZK thousands)"
 y_lab <- element_blank()
 title_lab <- paste(
-  "Spending on ads of presidential candidates since",
+  "Spending on ads of top", length(spenders_limit_high), "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -344,7 +345,7 @@ plot_name <- "ad_length"
 x_lab <- "Number of Words"
 y_lab <- element_blank()
 title_lab <- paste(
-  "Average ad length in words of presidential candidates since",
+  "Average ad length in words of top", length(spenders_limit_high), "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -394,7 +395,7 @@ plot_name <- "ad_runtime"
 x_lab <- "Days"
 y_lab <- element_blank()
 title_lab <- paste(
-  "Average ad runtime of presidential candidates since",
+  "Average ad runtime of top", length(spenders_limit_high), "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -445,7 +446,7 @@ fill_lab <- "Per Ad impressions (thousands)"
 x_lab <- "Total impressions (millions)"
 y_lab <- element_blank()
 title_lab <- paste(
-  "Total ads impressions of presidential candidates since",
+  "Total ads impressions of top", length(spenders_limit_high), "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -514,7 +515,9 @@ plot_name <- "avg_audience"
 x_lab <- "Average targeted audience size (thousands)"
 y_lab <- element_blank()
 title_lab <- paste(
-  "Average minimal estimated audience of presidential candidates since",
+  "Average minimal estimated audience of top",
+  length(spenders_limit_high),
+  "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -901,7 +904,9 @@ color_lab <- ""
 x_lab <- element_blank()
 y_lab <- "CZK million"
 title_lab <- paste(
-  "Spending on ads of presidential candidates since",
+  "Spending on ads of top",
+  length(spenders_limit_low),
+  "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -985,7 +990,9 @@ fill_lab <- ""
 x_lab <- element_blank()
 y_lab <- "CZK thousand"
 title_lab <- paste(
-  "Weekly spending on ads of presidential candidates since",
+  "Weekly spending on ads of top",
+  length(spenders_limit_low),
+  "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -1167,7 +1174,9 @@ plot_name <- "gender"
 x_lab <- "Proportion of ads displayed to male audience"
 y_lab <- element_blank()
 title_lab <- paste(
-  "Gender of audience of presidential candidates since",
+  "Gender of audience of top",
+  length(spenders_limit_high),
+  "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -1221,7 +1230,9 @@ fill_lab <- ""
 x_lab <- element_blank()
 y_lab <- element_blank()
 title_lab <- paste(
-  "Age of audience of presidential candidates since",
+  "Age of audience of top",
+  length(spenders_limit_low),
+  "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -1329,7 +1340,9 @@ fill_lab <- ""
 x_lab <- element_blank()
 y_lab <- element_blank()
 title_lab <- paste(
-  "Regions of audience of ads of presidential candidates since",
+  "Regions of audience of ads of top",
+  length(spenders_limit_low),
+  "spenders since",
   format(start_date, "%d.%m.%Y")
 )
 ```
@@ -1438,7 +1451,7 @@ fill_lab <- ""
 x_lab <- element_blank()
 y_lab <- "CZK thousand"
 title_lab <- paste(
-  "Spending of presidential candidates by region since",
+  "Top", params$spenders_limit_low, "spenders by region since",
   format(start_date, "%d.%m.%Y")
 )
 ```

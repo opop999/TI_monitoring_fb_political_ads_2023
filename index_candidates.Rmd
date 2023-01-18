@@ -1,5 +1,5 @@
 ---
-title: "Facebook ADS Candidates"
+title: "FB Ads Candidates"
 author: "Ondrej Pekacek & TI CZ"
 date: "`r format(Sys.Date(),'%d. %m. %Y')`"
 output: 
@@ -15,7 +15,8 @@ output:
     orientation: columns
     vertical_layout: fill
     navbar:
-      - {title: "Show all", icon: "ion-ios-people", href: "./index.html"}
+      - {title: "All", icon: "ion-earth", href: "./index_all.html"}            
+      - {title: "Duelists", icon: "ion-person-stalker", href: "./index.html"}      
       - {title: "Project", icon: "ion-information-circled", href: "https://www.transparentnivolby.cz/hrad2023"}
       - {title: "Author", icon: "ion-social-linkedin", href: "https://www.linkedin.com/in/ondrej-pekacek"}
       - {title: "Data", icon: "ion-cloud", href: "https://www.facebook.com/ads/library"}
